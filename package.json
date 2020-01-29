@@ -2,7 +2,7 @@
   "name": "spotify-enhancer",
   "version": "1.0.0",
   "description": "Discord Bot to elevate your Spotify experience to the next level 🚀",
-  "main": "index.js",
+  "main": "bot.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,6 +18,9 @@
   },
   "homepage": "https://github.com/m4tr1k/spotify-enhancer#readme",
   "dependencies": {
-    "discord.js": "^11.5.1"
+    "axios": "^0.19.2",
+    "discord.js": "^11.5.1",
+    "express": "^4.17.1",
+    "spotify-web-api-node": "^4.0.0"
   }
 }
