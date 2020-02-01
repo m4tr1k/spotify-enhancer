@@ -1,9 +1,11 @@
 const Discord = require('discord.js');
 const express = require('express');
-const newReleases = require('./src/newReleases');
-const spotifyProps = require('./api/spotify-properties');
 const discordClient = new Discord.Client();
 const auth = require('./auth.json');
+
+const newReleases = require('./src/newReleases');
+const spotifyProps = require('./api/spotify-properties');
+const search = require('./src/search/search');
 const prefix = '!sptEn ';
 
 var app = express();
@@ -49,8 +51,10 @@ function refreshToken(){
 
 discordClient.on('message', msg => {
     if (msg.content.includes(prefix)) {
-        var artists = msg.content.replace(prefix, "").split(',');
-        newReleases.createMessageNewReleases(artists, msg);
+        var artists = msg.content.replace(prefix, "").split(',').map(item => item.trim());
+        search.searchArtists(artists).then( artistsIds => {
+          newReleases.createMessageNewReleases(artistsIds, msg);
+        })
     }   
 });
 
