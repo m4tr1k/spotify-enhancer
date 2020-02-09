@@ -1,44 +1,122 @@
 const spotifyClient = require('../../api/spotify-properties').spotifyClient;
-const searchArtistByName = require('./chooseArtist');
+const discordClient = require('../../api/discord-properties').discordClient;
 
-function searchArtists(artists, msgDiscord){
-    var aux = 0;
-    return new Promise ( returnArray => {
-        for(var i = 0; i < artists.length; i++){
-            new Promise ( res => {
-                res(i);
-            }).then( number => {
-                new Promise ( resolve => {
-                    if(artists[number].startsWith("spotify:artist:")){
-                        artists[number] = artists[number].replace("spotify:artist:", "");
-                        resolve();
-                    } else {
-                        spotifyClient.searchArtists(artists[number], { limit : 20, offset : 0 }).then( dataArtist => {
-                            if(dataArtist.body.artists.items.length !== 0){
-                                var possibleArtists = dataArtist.body.artists.items;
-                                msgDiscord.reply('Which "_' + artists[number] + '_" are you looking for? (React with ✅ on the desired artist)').then( msg => {
-                                    searchArtistByName.chooseArtist(msgDiscord, possibleArtists, 0).then( artistID => {
-                                        msg.delete().then( () => {
-                                            artists[number] = artistID;
-                                            resolve();
-                                        })
-                                    });
-                                })
-                            } else {
-                                artists[number] = artists[number].replace(artists[number], "");
-                                resolve();
-                            }
-                        })
-                }
-                }).then( () => {
-                    aux++;
-                    if(aux === artists.length){
-                        returnArray(artists);
-                    }
-                }) 
-            })
+var info;
+var verifyHandler = false;
+var listener;
+
+var InfoIDs = function(props){
+    this.artistId = props.artistId;
+    this.messageId = props.messageId;
+}
+
+async function searchArtists(artists, msgDiscord){
+    var arrayIndex = [];
+    const artistsNames = await selectArtistsByName(artists, arrayIndex);
+    for(var i = 0; i < artistsNames.length; i++){
+        await searchArtistByName(artistsNames[i], artists, msgDiscord, arrayIndex[i]);
+    }
+    console.log(artists);
+    return new Promise ( returnArtistArray => returnArtistArray(artists));
+}
+
+async function selectArtistsByName(artists, arrayIndex){
+    return new Promise(returnArray => {
+        var artistsNames = [];
+        var aux = 0;
+        for (var i = 0; i < artists.length; i++) {
+            if (artists[i].startsWith("spotify:artist:")) {
+                artists[i] = artists[i].replace("spotify:artist:", "");
+            } else {
+                arrayIndex[aux] = i;
+                artistsNames[aux] = artists[i];
+                aux++;
+            }
         }
+        returnArray(artistsNames);
+    });
+}
+
+ async function searchArtistByName(artistName, artists, msgDiscord, number){
+    const search = await spotifyClient.searchArtists(artistName, { limit : 20, offset : 0 });
+    const possibleArtists = search.body.artists.items;
+    if(possibleArtists.length !== 0){
+        const msgReply = await msgDiscord.reply('Which "_' + artistName + '_" are you looking for? (React with ✅ on the desired artist)');
+        const artistDetails = await buildMessage(possibleArtists, 0);
+
+        await sendMessage(artistDetails, msgDiscord);
+
+        const artistID = await chooseArtist(possibleArtists, 0, msgDiscord);
+
+        await msgReply.delete();
+        artists[number] = artistID;
+    } else {
+        artists[number] = '';
+    }
+}
+
+async function buildMessage(possibleArtists, number){
+    return new Promise (returnArtistDetails => {
+        if(verifyHandler){
+            console.log('entrei aqui');
+            discordClient.emit('delete-reaction-add');
+        }
+        verifyHandler = true;
+        const currentArtist = possibleArtists[number];
+        info = new InfoIDs({
+            artistId: currentArtist.id,
+            messageId: ''
+        })
+        var artistDetails = '**' + currentArtist.name + '** (' + currentArtist.external_urls.spotify + ')' + '\nGenres: ';
+        if(currentArtist.genres.length === 0){
+            artistDetails += '*(not specified)*';
+        } else {
+            for(var l = 0; l < currentArtist.genres.length - 1; l++){
+                artistDetails += currentArtist.genres[l] + ', ';
+            }
+            artistDetails += currentArtist.genres[currentArtist.genres.length - 1];
+        }
+        returnArtistDetails(artistDetails)
     })
 }
+
+async function sendMessage(artistDetails, msgDiscord){
+    const msgReaction = await msgDiscord.channel.send(artistDetails);
+    info.messageId = msgReaction.id;
+    await msgReaction.react('✅');
+    await msgReaction.react('❎');
+}
+
+async function chooseArtist(possibleArtists, number, msgDiscord){
+    return new Promise ( returnArtistID => {
+        listener = (reaction, user) => {
+            if(reaction.emoji.name === '✅' && info.messageId === reaction.message.id && !user.bot){
+                reaction.message.delete().then(() => returnArtistID(info.artistId))
+            } else if(reaction.emoji.name === '❎' && info.messageId === reaction.message.id && !user.bot){
+                if(number < possibleArtists.length - 1){
+                    var aux = ++number;
+                    console.log(aux);
+                    reaction.message.delete().then(() => {
+                        buildMessage(possibleArtists, aux).then( artistDetails => {
+                            sendMessage(artistDetails, msgDiscord).then( () => {
+                                chooseArtist(possibleArtists, aux, msgDiscord).then( artistID => {
+                                    returnArtistID(artistID)
+                                })
+                            })
+                        })
+                    })
+                } else {
+                    returnArtistID('');
+                }
+            }
+        }
+    
+        discordClient.on('messageReactionAdd', listener);
+    })
+}
+
+discordClient.addListener('delete-reaction-add', () => {
+    discordClient.removeListener('messageReactionAdd', listener)
+})
 
 exports.searchArtists = searchArtists;
