@@ -1,6 +1,5 @@
-const Discord = require('discord.js');
 const express = require('express');
-const discordClient = new Discord.Client();
+const discordClient = require('./api/discord-properties').discordClient;
 const auth = require('./auth.json');
 
 const newReleases = require('./src/newReleases');
@@ -52,7 +51,7 @@ function refreshToken(){
 discordClient.on('message', msg => {
     if (msg.content.includes(prefix)) {
         var artists = msg.content.replace(prefix, "").split(',').map(item => item.trim());
-        search.searchArtists(artists).then( artistsIds => {
+        search.searchArtists(artists, msg).then( artistsIds => {
           newReleases.createMessageNewReleases(artistsIds, msg);
         })
     }   
