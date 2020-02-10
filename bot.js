@@ -1,9 +1,10 @@
 const express = require('express');
 const discordClient = require('./api/discord-properties').discordClient;
+const spotifyProps = require('./api/spotify-properties');
 const auth = require('./auth.json');
 
 const newReleases = require('./src/newReleases');
-const spotifyProps = require('./api/spotify-properties');
+const server = require('./src/newServer');
 const search = require('./src/search/search');
 const prefix = '!sptEn ';
 
@@ -56,6 +57,12 @@ discordClient.on('message', msg => {
         })
     }   
 });
+
+discordClient.on('guildCreate', guild => {
+  if(guild.available){
+    server.welcome(guild);
+  }
+})
 
 console.log('Listening on 8888');
 discordClient.login(auth.token);
