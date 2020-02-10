@@ -35,8 +35,13 @@ function createMessageNewReleases(artistsIds, msgDiscord){
             
                         artistNames += artists[artists.length - 1].name;
             
-                        axios.get(res.data.items[0].href, authOptions).then( res => {
+                        axios.get(album.href, authOptions).then( res => {
                             var fullAlbum = res.data;
+
+                            var latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ';
+                            const splitDate = album.release_date.split('-');
+                            const releaseDate = splitDate[2] + '/' + splitDate[1] + '/' + splitDate[0];
+                            latestRelease += releaseDate + '\n\n';
             
                             if(fullAlbum.total_tracks > 1){
                                 var tracklist = "";
@@ -55,7 +60,7 @@ function createMessageNewReleases(artistsIds, msgDiscord){
                                     tracklist += '\n';
                                 }
                 
-                                const latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ' + album.release_date + '\n\nTracklist:\n' + tracklist + '\n' + album.external_urls.spotify;
+                                latestRelease += 'Tracklist:\n' + tracklist + '\n' + album.external_urls.spotify;
                                 if(!messages.includes(latestRelease)){
                                     messages.push(latestRelease);
                                     msgDiscord.channel.send(latestRelease).then( lstMsg => {
@@ -65,7 +70,7 @@ function createMessageNewReleases(artistsIds, msgDiscord){
                                     }); 
                                 }
                             } else {
-                                const latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ' + album.release_date + '\n\n' + fullAlbum.tracks.items[0].external_urls.spotify;
+                                latestRelease += fullAlbum.tracks.items[0].external_urls.spotify;
                                 if(!messages.includes(latestRelease)){
                                     messages.push(latestRelease);
                                     msgDiscord.channel.send(latestRelease).then( lstMsg => {

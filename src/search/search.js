@@ -16,7 +16,6 @@ async function searchArtists(artists, msgDiscord){
     for(var i = 0; i < artistsNames.length; i++){
         await searchArtistByName(artistsNames[i], artists, msgDiscord, arrayIndex[i]);
     }
-    console.log(artists);
     return new Promise ( returnArtistArray => returnArtistArray(artists));
 }
 
@@ -58,7 +57,6 @@ async function selectArtistsByName(artists, arrayIndex){
 async function buildMessage(possibleArtists, number){
     return new Promise (returnArtistDetails => {
         if(verifyHandler){
-            console.log('entrei aqui');
             discordClient.emit('delete-reaction-add');
         }
         verifyHandler = true;
@@ -95,7 +93,6 @@ async function chooseArtist(possibleArtists, number, msgDiscord){
             } else if(reaction.emoji.name === '❎' && info.messageId === reaction.message.id && !user.bot){
                 if(number < possibleArtists.length - 1){
                     var aux = ++number;
-                    console.log(aux);
                     reaction.message.delete().then(() => {
                         buildMessage(possibleArtists, aux).then( artistDetails => {
                             sendMessage(artistDetails, msgDiscord).then( () => {
