@@ -4,36 +4,23 @@ var listenerReaction;
 var listenerRole;
 
 async function welcome(guild){
-    const firstMsg = await discordClient.users.get(guild.ownerID).send('Hello there 👋!\nThank you for using me to enhance your spotify experience 🚀\nBefore start using my features, please make sure that I have at permission to manage channels.\nAfter you done that, this message will be automatically deleted');
-    await checkRole(guild);
-    discordClient.removeListener('guildMemberUpdate', listenerRole);
-    await firstMsg.delete();
-    const secondMsg = await discordClient.users.get(guild.ownerID).send('Great 😄\nOne last thing, would you like to create a dedicated channel on __**' + guild.name + '**__ for new releases?')
-    await secondMsg.react('✅');
-    await secondMsg.react('❎');
-    await createNewReleasesChannel(guild, secondMsg);
+    const msg = await discordClient.users.get(guild.ownerID).send('**Hello there** 👋\nThank you for using me to enhance your spotify experience 🚀\n\nBefore start using my features, would you like to create a dedicated channel on __**' + guild.name + '**__ for new releases?')
+    await msg.react('✅');
+    await msg.react('❎');
+    await createNewReleasesChannel(guild, msg);
     discordClient.removeListener('messageReactionAdd', listenerReaction)
-}
-
-async function checkRole(guild){
-    return new Promise ( resolve => {
-        listenerRole = (oldMember, newMember) => {
-            if(newMember.user.username === guild.me.user.username && newMember.hasPermission('MANAGE_CHANNELS')){
-                resolve()
-            }
-        }
-        discordClient.on('guildMemberUpdate', listenerRole);
-    })
 }
 
 async function createNewReleasesChannel(guild, msg){
     return new Promise ( resolve => {
         listenerReaction = (reaction, user) => {
             if(reaction.message.id === msg.id && reaction.emoji.name === '✅' && !user.bot){
-                createChannel(guild).then( () => {
-                    discordClient.users.get(guild.ownerID)
-                    .send("Nice to hear that 😄\nEveryday I will check if your favourite artists have new releases\nIn the meantime, you can still use my features to search the latest release of any artist\n\nI hope to enhance your spotify experience 🧡\nBest regards,\n_Spotify Enhancer_")
-                    .then(() => resolve());
+                createRole(guild).then(role => {
+                    createChannel(guild, role).then( () => {
+                        discordClient.users.get(guild.ownerID)
+                        .send("Nice to hear that 😄\n\n__**Some things to keep in mind:**__\n\n-> Anyone can add or remove artists with the new role 'New Releases Manager' *(and admins of course)*\n-> The new releases will be posted in '🎵new-releases'\n\nEveryday I will check if your favourite artists have new releases\nIn the meantime, you can still use my features to search the latest release of any artist\n\nI hope to enhance your spotify experience 🧡\nBest regards,\n_Spotify Enhancer_")
+                        .then(() => resolve());
+                    })
                 })
             } else if (reaction.message.id === msg.id && reaction.emoji.name === '❎' && !user.bot){
                 discordClient.users.get(guild.ownerID).send("No problem 👍\nYou can still use my features to search the latest release of any artist\n\nI hope to enhance your spotify experience 🧡\nBest regards,\n_Spotify Enhancer_").then(() => resolve());
@@ -43,11 +30,43 @@ async function createNewReleasesChannel(guild, msg){
     })
 }
 
-async function createChannel(guild){
+async function createRole(guild){
+    if(!guild.roles.some(role => role.name === 'New Releases Manager')){
+        const role = await guild.createRole({
+            name: 'New Releases Manager',
+            color: [29, 185, 84],
+            mentionable: true
+        })
+        return role;
+    } else {
+        return guild.roles.find(role => role.name === 'New Releases Manager');
+    }
+}
+
+async function createChannel(guild, createdRole){
     return new Promise ( res => {
-        if(!guild.channels.array().some(channel => channel.name === 'new-releases')){
-            guild.createChannel('new-releases', { type: 'text' })
-            .then(() => res())
+        const everyoneRole = guild.roles.find(role => role.name === '@everyone');
+
+        if(!guild.channels.array().some(channel => channel.name === '🎵new-releases')){
+            guild.createChannel('🎵new-releases', { 
+                type: 'text',
+                topic: 'Check the new releases from your favourite artists here 🤟',
+                permissionOverwrites: [
+                    {
+                        allow: ['SEND_MESSAGES', 'ADD_REACTIONS'],
+                        id: createdRole.id
+                    },
+                    {
+                        deny: ['SEND_MESSAGES', 'ADD_REACTIONS'],
+                        id: everyoneRole.id
+                    },
+                    {
+                        allow: ['SEND_MESSAGES', 'ADD_REACTIONS'],
+                        id: guild.me.id
+                    }
+                    
+                ] 
+            })
         }
         res();
     })
