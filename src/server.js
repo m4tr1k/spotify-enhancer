@@ -65,8 +65,25 @@ async function createChannel(guild, createdRole){
                     {
                         allow: ['SEND_MESSAGES', 'ADD_REACTIONS'],
                         id: guild.me.id
+                    }  
+                ] 
+            })
+        } else {
+            const channel = guild.channels.array().find(channel => channel.name === '🎵new-releases');
+            channel.edit({
+                permissionOverwrites: [
+                    {
+                        allow: ['SEND_MESSAGES', 'ADD_REACTIONS'],
+                        id: createdRole.id
+                    },
+                    {
+                        deny: ['SEND_MESSAGES', 'ADD_REACTIONS'],
+                        id: everyoneRole.id
+                    },
+                    {
+                        allow: ['SEND_MESSAGES', 'ADD_REACTIONS'],
+                        id: guild.me.id
                     }
-                    
                 ] 
             })
         }
