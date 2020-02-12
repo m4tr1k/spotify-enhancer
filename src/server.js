@@ -1,7 +1,7 @@
 const discordClient = require('../api/discord-properties').discordClient
+const db = require('../api/mongoDB-funcs');
 
 var listenerReaction;
-var listenerRole;
 
 async function welcome(guild){
     const msg = await discordClient.users.get(guild.ownerID).send('**Hello there** 👋\nThank you for using me to enhance your spotify experience 🚀\n\nBefore start using my features, would you like to create a dedicated channel on __**' + guild.name + '**__ for new releases?')
@@ -45,6 +45,8 @@ async function createRole(guild){
 
 async function createChannel(guild, createdRole){
     return new Promise ( res => {
+        db.insertGuildDB(guild.id);
+
         const everyoneRole = guild.roles.find(role => role.name === '@everyone');
 
         if(!guild.channels.array().some(channel => channel.name === '🎵new-releases')){
@@ -72,4 +74,9 @@ async function createChannel(guild, createdRole){
     })
 }
 
+async function removeGuild(guild){
+    db.removeGuildDB(guild.id);
+}
+
 exports.welcome = welcome;
+exports.removeGuild = removeGuild

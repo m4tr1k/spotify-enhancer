@@ -4,7 +4,7 @@ const spotifyProps = require('./api/spotify-properties');
 const auth = require('./auth.json');
 
 const newReleases = require('./src/newReleases');
-const server = require('./src/newServer');
+const server = require('./src/server');
 const search = require('./src/search/search');
 const prefix = '!sptEn ';
 
@@ -23,11 +23,10 @@ discordClient.on('ready', () => {
     if(state !== null){
       spotifyProps.spotifyClient.authorizationCodeGrant(code).then(
         data => {
-
           spotifyProps.spotifyClient.setAccessToken(data.body['access_token']);
           spotifyProps.spotifyClient.setRefreshToken(data.body['refresh_token']);
 
-          console.log(`Running...`);
+          console.log(`Spotify connection working...`);
         },
         err => {
           console.log('Something went wrong!', err);
@@ -61,6 +60,12 @@ discordClient.on('message', msg => {
 discordClient.on('guildCreate', guild => {
   if(guild.available){
     server.welcome(guild);
+  }
+})
+
+discordClient.on('guildDelete', guild => {
+  if(guild.available){
+    server.removeGuild(guild);
   }
 })
 

@@ -21,6 +21,7 @@
     "axios": "^0.19.2",
     "discord.js": "^11.5.1",
     "express": "^4.17.1",
+    "mongoose": "^5.8.11",
     "spotify-web-api-node": "^4.0.0"
   }
 }
