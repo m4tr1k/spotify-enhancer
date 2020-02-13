@@ -4,9 +4,10 @@ const spotifyProps = require('./api/spotify-properties');
 const auth = require('./auth.json');
 
 const newReleases = require('./src/newReleases');
+const checkReleases = require('./src/checkReleases');
 const server = require('./src/server');
 const search = require('./src/search/search');
-const prefix = '!sptEn ';
+const prefix = '!SE ';
 
 var app = express();
 
@@ -31,11 +32,17 @@ discordClient.on('ready', () => {
         err => {
           console.log('Something went wrong!', err);
       }).then( () => {
+        //setInterval(sendNewReleases, 10000)
         setInterval(refreshToken, 3600000);
       })
     }
   })
 });
+
+
+function sendNewReleases(){
+  checkReleases.sendNewReleases();
+}
 
 function refreshToken(){
   spotifyProps.spotifyClient.refreshAccessToken().then(
@@ -49,11 +56,19 @@ function refreshToken(){
 }
 
 discordClient.on('message', msg => {
-    if (msg.content.includes(prefix)) {
-        var artists = msg.content.replace(prefix, "").split(',').map(item => item.trim());
-        search.searchArtists(artists, msg).then( artistsIds => {
-          newReleases.createMessageNewReleases(artistsIds, msg);
+    if(msg.content.includes(prefix)) {
+      var artists = msg.content.replace(prefix, "").split(',').map(item => item.trim());
+      search.searchArtists(artists, msg).then( artistsIds => {
+        checkReleases.verifyNewReleasesChannel(msg.channel.id).then( cursor => {
+          cursor.hasNext().then( result => {
+            if(result){
+              checkReleases.addArtistsToGuild(artistsIds, cursor);
+            } else {
+              newReleases.createMessageNewReleases(artistsIds, msg.channel);
+            }
+          })
         })
+      })
     }   
 });
 

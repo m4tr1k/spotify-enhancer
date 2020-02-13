@@ -1,7 +1,7 @@
 const axios = require('axios');
 const spotifyProps = require('../api/spotify-properties');
 
-function createMessageNewReleases(artistsIds, msgDiscord){
+function createMessageNewReleases(artistsIds, channel){
     var a;
     var messages = [];
     for(a = 0; a < artistsIds.length; a++){
@@ -10,11 +10,11 @@ function createMessageNewReleases(artistsIds, msgDiscord){
         }).then(a => {
             var artistID = artistsIds[a];
             if(artistID === ''){
-                msgDiscord.reply('**WARNING:** it seems artist number ' + (a+1) + ' does not exist...');
+                channel.send('**WARNING:** it seems artist number ' + (a+1) + ' does not exist...');
             } else {
                 spotifyProps.spotifyClient.getArtistAlbums(artistID, {offset: 0, include_groups: 'album,single'}).then( dataAlbum => {
                     if(dataAlbum.body.items.length === 0){
-                        msgDiscord.reply('**WARNING:** it seems the artist you chose does not have any release...')
+                        channel.send('**WARNING:** it seems the artist you chose does not have any release...')
                     } else {
                         var authOptions = {
                             headers: {
@@ -66,7 +66,7 @@ function createMessageNewReleases(artistsIds, msgDiscord){
                                     latestRelease += 'Tracklist:\n' + tracklist + '\n' + album.external_urls.spotify;
                                     if(!messages.includes(latestRelease)){
                                         messages.push(latestRelease);
-                                        msgDiscord.channel.send(latestRelease).then( lstMsg => {
+                                        channel.send(latestRelease).then( lstMsg => {
                                             lstMsg.react('👍')
                                             .then(() => lstMsg.react('👎'))
                                             .then(() => lstMsg.react('❤️'));
@@ -76,7 +76,7 @@ function createMessageNewReleases(artistsIds, msgDiscord){
                                     latestRelease += fullAlbum.tracks.items[0].external_urls.spotify;
                                     if(!messages.includes(latestRelease)){
                                         messages.push(latestRelease);
-                                        msgDiscord.channel.send(latestRelease).then( lstMsg => {
+                                        channel.send(latestRelease).then( lstMsg => {
                                             lstMsg.react('👍')
                                             .then(() => lstMsg.react('👎'))
                                             .then(() => lstMsg.react('❤️'));
