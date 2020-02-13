@@ -1,5 +1,5 @@
 const db = require('../api/mongoDB-funcs');
-const newReleases = require('./newReleases');
+const releases = require('./releases');
 const discordClient = require('../api/discord-properties').discordClient;
 
 async function verifyNewReleasesChannel(idChannel){
@@ -16,9 +16,12 @@ async function addArtistsToGuild(artistsIds, cursor){
 async function sendNewReleases(){
     const cursor = await db.getAllGuilds();
     cursor.forEach(guild => {
-        const channel = discordClient.channels.find(channel => channel.id === guild.idReleasesChannel);
-        console.log(channel);
-        newReleases.createMessageNewReleases(guild.artists, channel);
+        releases.checkNewReleases(guild.artists).then( messages => {
+            if(messages.length > 0){
+                const channel = discordClient.channels.find(channel => channel.id === guild.idReleasesChannel);
+                releases.sendNewReleases(messages, channel);
+            }
+        });
     })
     await db.client.close();
 }

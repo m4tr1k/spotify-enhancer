@@ -3,7 +3,7 @@ const discordClient = require('./api/discord-properties').discordClient;
 const spotifyProps = require('./api/spotify-properties');
 const auth = require('./auth.json');
 
-const newReleases = require('./src/newReleases');
+const newReleases = require('./src/releases');
 const checkReleases = require('./src/checkReleases');
 const server = require('./src/server');
 const search = require('./src/search/search');
@@ -32,7 +32,7 @@ discordClient.on('ready', () => {
         err => {
           console.log('Something went wrong!', err);
       }).then( () => {
-        //setInterval(sendNewReleases, 10000)
+        setInterval(sendNewReleases, 10000)
         setInterval(refreshToken, 3600000);
       })
     }
