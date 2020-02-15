@@ -32,7 +32,13 @@ discordClient.on('ready', () => {
         err => {
           console.log('Something went wrong!', err);
       }).then( () => {
-        setInterval(sendNewReleases, 10000)
+        var localTime = new Date();
+        var timeUntilCheck = new Date(localTime.getFullYear(), localTime.getMonth(), localTime.getDate(), 11, 0, 0, 0) - localTime;
+        if(timeUntilCheck > 0){
+          setTimeout(() => {sendNewReleases(), setInterval(86400000)}, timeUntilCheck);
+        } else {
+          setInterval(sendNewReleases, 86400000)
+        }
         setInterval(refreshToken, 3600000);
       })
     }
