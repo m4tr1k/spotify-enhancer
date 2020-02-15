@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const client = mongoose.connection
+const releases = require('../src/releases');
 
 async function newConnection(){
     await mongoose.connect('mongodb://localhost:27017/spotify-enhancer', {useNewUrlParser: true, useUnifiedTopology: true});
@@ -38,8 +39,6 @@ async function insertGuildDB(idServer, idReleasesChannel){
             artists: []
         })
     }
-
-    await client.close();
 }
 
 async function removeGuildDB(idServer){
@@ -52,8 +51,6 @@ async function removeGuildDB(idServer){
             _id: idServer
         })
     }
-
-    await client.close();
 }
 
 async function insertArtistsDB(artistsIds, idServer){
@@ -65,13 +62,35 @@ async function insertArtistsDB(artistsIds, idServer){
             }
         }).count();
         if(number === 0){
+            const latestRelease = await releases.getLatestRelease(artistsIds, i);
+            const idLatestRelease = latestRelease.id
             await client.collection('guild').updateOne(
                 {_id: idServer},
                 {
-                    $push: { artists: artistsIds[i] } 
+                    $push: { artists: 
+                        { 
+                            idArtist: artistsIds[i],
+                            idLatestRelease: idLatestRelease
+                        } 
+                    } 
                 }
             )
         }            
+    }
+}
+
+async function removeArtistsDB(artistsIds, idServer){
+    for(var i = 0; i < artistsIds.length; i++){
+        await client.collection('guild').updateOne(
+            {_id: idServer},
+            {
+                $pull: { artists: 
+                    {
+                        idArtist: artistsIds[i]
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -81,9 +100,27 @@ async function getAllGuilds(){
     return cursor;
 }
 
+async function updateLatestRelease(idArtist, updatedIdRelease, idServer){
+    await client.collection('guild').updateOne(
+        {
+            _id: idServer,
+            artists: {
+                idArtist: idArtist
+            }
+        },
+        {
+            artists: {
+                idLatestRelease: updatedIdRelease
+            }
+        }
+    )
+}
+
 exports.insertGuildDB = insertGuildDB
 exports.removeGuildDB = removeGuildDB
 exports.insertArtistsDB = insertArtistsDB
 exports.findChannel = findChannel
 exports.client = client
 exports.getAllGuilds = getAllGuilds
+exports.updateLatestRelease = updateLatestRelease
+exports.removeArtistsDB = removeArtistsDB

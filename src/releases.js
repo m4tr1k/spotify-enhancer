@@ -1,5 +1,6 @@
 const axios = require('axios');
-const spotifyProps = require('../api/spotify-properties');
+const spotify = require('../api/spotify-properties').client;
+const db = require('../api/mongoDB-funcs')
 
 function createMessageNewReleases(artistsIds, channel){
     var a;
@@ -12,17 +13,11 @@ function createMessageNewReleases(artistsIds, channel){
             if(artistID === ''){
                 channel.send('**WARNING:** it seems artist number ' + (a+1) + ' does not exist...');
             } else {
-                spotifyProps.spotifyClient.getArtistAlbums(artistID, {offset: 0, include_groups: 'album,single'}).then( dataAlbum => {
+                spotify.spotifyClient.getArtistAlbums(artistID, {offset: 0, include_groups: 'album,single'}).then( dataAlbum => {
                     if(dataAlbum.body.items.length === 0){
                         channel.send('**WARNING:** it seems the artist you chose does not have any release...')
-                    } else {
-                        var authOptions = {
-                            headers: {
-                                Authorization: 'Bearer ' + spotifyProps.spotifyClient.getAccessToken()
-                            }
-                        };
-            
-                        axios.get(dataAlbum.body.href, authOptions).then( res => {
+                    } else {          
+                        axios.get(dataAlbum.body.href, spotify.getAuthOptions()).then( res => {
                             var resultado = res.data.items;
                 
                             resultado.sort((a, b) => a.release_date.localeCompare(b.release_date));
@@ -38,7 +33,7 @@ function createMessageNewReleases(artistsIds, channel){
                 
                             artistNames += artists[artists.length - 1].name;
                 
-                            axios.get(album.href, authOptions).then( res => {
+                            axios.get(album.href, spotify.getAuthOptions()).then( res => {
                                 var fullAlbum = res.data;
     
                                 var latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ';
@@ -92,26 +87,16 @@ function createMessageNewReleases(artistsIds, channel){
     }
 }
 
-async function checkNewReleases(artists){
+async function checkNewReleases(guild){
     const artistsNewReleases = [];
-    for(var i = 0; i < artists.length; i++){
-        const dataAlbums = await spotifyProps.spotifyClient.getArtistAlbums(artists[i], {offset: 0, include_groups: 'album,single'})
-        if(dataAlbums.body.items.length !== 0){
-            var authOptions = {
-                headers: {
-                    Authorization: 'Bearer ' + spotifyProps.spotifyClient.getAccessToken()
-                }
-            };
-            const result = await axios.get(dataAlbums.body.href, authOptions);
-            const albums = result.data.items;
-            albums.sort((a, b) => a.release_date.localeCompare(b.release_date));
-            albums.reverse();
-
-            const newestAlbum = albums[0];
-            const releaseDate = new Date(newestAlbum.release_date);
-            const currentDate = new Date();
-            if(releaseDate > currentDate){
-                const message = await createMessage(newestAlbum, authOptions);
+    const artists = guild.artists;
+    const artistsIds = artists.map(artist => artist.idArtist);
+    for(var i = 0; i < artists.length; i++){     
+        const newestAlbum = await getLatestRelease(artistsIds, i);
+        if(newestAlbum !== ''){
+            if(artists[i].idLatestRelease !== newestAlbum.id){
+                db.updateLatestRelease(artists[i].idArtist, newestAlbum.id, guild._id);
+                const message = await createMessage(newestAlbum);
                 if(!artistsNewReleases.includes(message)){
                     artistsNewReleases.push(message);
                 }
@@ -121,7 +106,21 @@ async function checkNewReleases(artists){
     return artistsNewReleases;
 }
 
-async function createMessage(album, authOptions){
+async function getLatestRelease(artists, number){
+    const dataAlbums = await spotify.spotifyClient.getArtistAlbums(artists[number], {offset: 0, include_groups: 'album,single'})
+    if(dataAlbums.body.items.length !== 0){
+        const result = await axios.get(dataAlbums.body.href, spotify.getAuthOptions());
+        const albums = result.data.items;
+        albums.sort((a, b) => a.release_date.localeCompare(b.release_date));
+        albums.reverse();
+
+        return albums[0];
+    } else {
+        return '';
+    }
+}
+
+async function createMessage(album){
     const artists = album.artists;
     var artistNames = '';
 
@@ -131,7 +130,7 @@ async function createMessage(album, authOptions){
 
     artistNames += artists[artists.length - 1].name;
 
-    const result = await axios.get(album.href, authOptions);
+    const result = await axios.get(album.href, spotify.getAuthOptions());
     const fullAlbum = result.data;
 
     var latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ';
@@ -177,3 +176,4 @@ function sendNewReleases(messages, channel){
 exports.createMessageNewReleases = createMessageNewReleases;
 exports.checkNewReleases = checkNewReleases;
 exports.sendNewReleases = sendNewReleases;
+exports.getLatestRelease = getLatestRelease;

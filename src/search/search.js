@@ -1,4 +1,4 @@
-const spotifyClient = require('../../api/spotify-properties').spotifyClient;
+const spotify = require('../../api/spotify-properties').client;
 const discordClient = require('../../api/discord-properties').discordClient;
 
 var info;
@@ -37,7 +37,7 @@ async function selectArtistsByName(artists, arrayIndex){
 }
 
  async function searchArtistByName(artistName, artists, msgDiscord, number){
-    const search = await spotifyClient.searchArtists(artistName, { limit : 20, offset : 0 });
+    const search = await spotify.spotifyClient.searchArtists(artistName, { limit : 20, offset : 0 });
     const possibleArtists = search.body.artists.items;
     if(possibleArtists.length !== 0){
         const msgReply = await msgDiscord.reply('Which "_' + artistName + '_" are you looking for? (React with ✅ on the desired artist)');
