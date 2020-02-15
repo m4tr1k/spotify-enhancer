@@ -1,15 +1,28 @@
 const Spotify = require('spotify-web-api-node');
 const auth = require('../auth.json');
 
-var spotifyClient = new Spotify({
-    redirectUri: auth.redirectUri,
-    clientId: auth.clientId,
-    clientSecret: auth.clientSecret
-});
+class SpotifyClient{
+    constructor(){
+        this.spotifyClient = new Spotify({
+            redirectUri: auth.redirectUri,
+            clientId: auth.clientId,
+            clientSecret: auth.clientSecret
+        });
+    }
 
-const scopes = ['user-read-private', 'user-read-email'];
+    getAuthorizeURL(){
+        const scopes = ['user-read-private', 'user-read-email'];
+        return this.spotifyClient.createAuthorizeURL(scopes, auth.state);
+    }
 
-const authorizeURL = spotifyClient.createAuthorizeURL(scopes, auth.state);
+    getAuthOptions(){
+        return {
+            headers: {
+                Authorization: 'Bearer ' + this.spotifyClient.getAccessToken()
+            }
+        }
+    }
+}
 
-exports.spotifyClient = spotifyClient;
-exports.URL = authorizeURL;
+const client = new SpotifyClient();
+exports.client = client;
