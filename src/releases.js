@@ -24,24 +24,29 @@ function createMessageNewReleases(artistsIds, channel){
                             resultado.reverse();
                 
                             const album = resultado[0];
-                            const artists = album.artists;
+                            const albumArtists = album.artists.filter(artist => {
+                                if(!album.name.includes(artist.name)){
+                                    return artist.name
+                                }
+                            }).map(artist => artist.name);
+                            
                             var artistNames = '';
                 
-                            for(var i = 0; i < artists.length - 1; i++){
-                                artistNames += artists[i].name + ' & ';
+                            for(var i = 0; i < albumArtists.length - 1; i++){
+                                artistNames += albumArtists[i] + ' & ';
                             }
                 
-                            artistNames += artists[artists.length - 1].name;
+                            artistNames += albumArtists[albumArtists.length - 1];
                 
                             axios.get(album.href, spotify.getAuthOptions()).then( res => {
                                 var fullAlbum = res.data;
-    
-                                var latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ';
-                                const splitDate = album.release_date.split('-');
-                                const releaseDate = splitDate[2] + '/' + splitDate[1] + '/' + splitDate[0];
-                                latestRelease += releaseDate + '\n\n';
                 
                                 if(fullAlbum.total_tracks > 1){
+                                    var latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ';
+                                    const splitDate = album.release_date.split('-');
+                                    const releaseDate = splitDate[2] + '/' + splitDate[1] + '/' + splitDate[0];
+                                    latestRelease += releaseDate + '\n\n';
+
                                     var tracklist = "";
                                     const tracks = fullAlbum.tracks.items;
                     
@@ -68,6 +73,25 @@ function createMessageNewReleases(artistsIds, channel){
                                         }); 
                                     }
                                 } else {
+                                    const trackArtists = fullAlbum.tracks.items[0].artists.filter(artist => {
+                                        if(!albumArtists.includes(artist.name) && !fullAlbum.name.includes(artist.name)){
+                                            return artist.name
+                                        }
+                                    }).map(artist => artist.name);
+
+                                   if(trackArtists.length > 0){
+                                       artistNames += ' (ft. ';
+                                       for(var i = 0; i < trackArtists.length - 1; i++){
+                                           artistNames += trackArtists[i] + ' & ';
+                                       }
+                                       artistNames += trackArtists[trackArtists.length - 1] + ')';
+                                   }
+
+                                    var latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ';
+                                    const splitDate = album.release_date.split('-');
+                                    const releaseDate = splitDate[2] + '/' + splitDate[1] + '/' + splitDate[0];
+                                    latestRelease += releaseDate + '\n\n';
+
                                     latestRelease += fullAlbum.tracks.items[0].external_urls.spotify;
                                     if(!messages.includes(latestRelease)){
                                         messages.push(latestRelease);
@@ -121,24 +145,28 @@ async function getLatestRelease(artists, number){
 }
 
 async function createMessage(album){
-    const artists = album.artists;
+    const albumArtists = album.artists.filter(artist => {
+        if(!album.name.includes(artist.name)){
+            return artist.name
+        }
+    }).map(artist => artist.name);                      
     var artistNames = '';
 
-    for(var i = 0; i < artists.length - 1; i++){
-        artistNames += artists[i].name + ' & ';
+    for(var i = 0; i < albumArtists.length - 1; i++){
+        artistNames += albumArtists[i] + ' & ';
     }
 
-    artistNames += artists[artists.length - 1].name;
+    artistNames += albumArtists[albumArtists.length - 1];
 
     const result = await axios.get(album.href, spotify.getAuthOptions());
     const fullAlbum = result.data;
 
-    var latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ';
-    const splitDate = album.release_date.split('-');
-    const releaseDate = splitDate[2] + '/' + splitDate[1] + '/' + splitDate[0];
-    latestRelease += releaseDate + '\n\n';
-
     if(fullAlbum.total_tracks > 1){
+        var latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ';
+        const splitDate = album.release_date.split('-');
+        const releaseDate = splitDate[2] + '/' + splitDate[1] + '/' + splitDate[0];
+        latestRelease += releaseDate + '\n\n';
+
         var tracklist = "";
         const tracks = fullAlbum.tracks.items;
 
@@ -158,6 +186,25 @@ async function createMessage(album){
         latestRelease += 'Tracklist:\n' + tracklist + '\n' + album.external_urls.spotify;
         return latestRelease;
     } else {
+        const trackArtists = fullAlbum.tracks.items[0].artists.filter(artist => {
+            if(!albumArtists.includes(artist.name) && !fullAlbum.name.includes(artist.name)){
+                return artist.name
+            }
+        }).map(artist => artist.name);
+
+       if(trackArtists.length > 0){
+           artistNames += ' (ft. ';
+           for(var i = 0; i < trackArtists.length - 1; i++){
+               artistNames += trackArtists[i] + ' & ';
+           }
+           artistNames += trackArtists[trackArtists.length - 1] + ')';
+       }
+
+        var latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ';
+        const splitDate = album.release_date.split('-');
+        const releaseDate = splitDate[2] + '/' + splitDate[1] + '/' + splitDate[0];
+        latestRelease += releaseDate + '\n\n';
+
         latestRelease += fullAlbum.tracks.items[0].external_urls.spotify;
         return latestRelease;
     }
