@@ -20,10 +20,12 @@ async function removeArtistsGuild(artistsIds, cursor){
 async function sendNewReleases(){
     const cursor = await db.getAllGuilds();
     cursor.forEach(guild => {
-        releases.checkNewReleases(guild).then( messages => {
-            if(messages.length > 0){
-                const channel = discordClient.channels.find(channel => channel.id === guild.idReleasesChannel);
-                releases.sendNewReleases(messages, channel);
+        releases.checkNewReleases(guild).then( albums => {
+            if(albums.length > 0){
+                releases.createEmbeds(albums).then(messages => {
+                    const channel = discordClient.channels.find(channel => channel.id === guild.idReleasesChannel);
+                    releases.sendNewReleases(messages, channel);
+                });
             }
         });
     })

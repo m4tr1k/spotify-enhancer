@@ -1,17 +1,128 @@
 const axios = require('axios');
+const Discord = require('discord.js');
 const spotify = require('../api/spotify-properties').client;
 const db = require('../api/mongoDB-funcs')
 
 async function createMessageNewReleases(artistsIds, channel){
-    const messages = [];
+    const albums = [];
     for(var i = 0; i < artistsIds.length; i++){
         const album = await getLatestRelease(artistsIds, i);
-        const msg = await createMessage(album);
+        if(!albums.some(obj => obj.uri === album.uri)){
+            albums.push(album);
+        }
+    }
+    const messages = await createEmbeds(albums);
+    sendNewReleases(messages, channel);
+}
+
+async function createEmbeds(albums){
+    var messages = [];
+    for(var i = 0; i < albums.length; i++){
+        const album = albums[i];
+        const fullAlbumDetails = await getFullAlbumDetails(album.href);
+        const artists = getAuthors(album);
+        const nameAlbum = album.name;
+        const label = 'Label: ' + fullAlbumDetails.label;
+        const splitDate = album.release_date.split('-');
+        const releaseDate = 'Release Date: ' + splitDate[2] + '/' + splitDate[1] + '/' + splitDate[0];
+        
+        let description;
+        let title;
+        if(fullAlbumDetails.total_tracks > 1){
+            const tracklist = getTracklist(fullAlbumDetails);
+            const link = album.external_urls.spotify;
+            title = artists + ' - ' + nameAlbum;
+            description = label + '\n' + releaseDate + '\n\nTracklist:\n' + tracklist + '\n[Spotify Link](' + link + ')'; 
+        } else {
+            const featuredArtists = getFeaturedArtists(fullAlbumDetails, artists)
+            if(featuredArtists !== undefined){
+                title = artists + ' ' + featuredArtists + ' - ' + nameAlbum;
+            } else {
+                title = artists + ' - ' + nameAlbum;
+            }
+            const link = fullAlbumDetails.tracks.items[0].external_urls.spotify;
+            
+            description = label + '\n' + releaseDate + '\n\n[🎧 Spotify Link](' + link + ')';
+        }
+
+        //Creates embed based on info gathered
+        const msg = createEmbed(title, description, fullAlbumDetails.images[0].url);
+        
         if(!messages.includes(msg)){
             messages.push(msg);
         }
     }
-    sendNewReleases(messages, channel);
+
+    return messages;
+}
+
+function createEmbed(title, description, urlImage){
+    return new Discord.RichEmbed()
+        .setColor('#1DB954')
+        .setTitle(title)
+        .setDescription(description)
+        .setThumbnail(urlImage)
+}
+
+async function getFullAlbumDetails(href){
+    const result = await axios.get(href, spotify.getAuthOptions());
+    const fullAlbumDetails = result.data;
+    return fullAlbumDetails;
+}
+
+function getAuthors(album){
+    const albumArtists = album.artists.filter(artist => {
+        if(!album.name.includes(artist.name)){
+            return artist.name
+        }
+    }).map(artist => artist.name);                      
+    var authors = '';
+
+    for(var i = 0; i < albumArtists.length - 1; i++){
+        authors += albumArtists[i] + ' & ';
+    }
+
+    authors += albumArtists[albumArtists.length - 1];
+    return authors
+}
+
+function getFeaturedArtists(fullAlbumDetails, artists){
+    const trackArtists = fullAlbumDetails.tracks.items[0].artists.filter(artist => {
+        if(!artists.includes(artist.name) && !fullAlbumDetails.name.includes(artist.name)){
+            return artist.name
+        }
+    }).map(artist => artist.name);
+
+    let featuredArtists;
+    if(trackArtists.length > 0){
+        featuredArtists = ' (ft. ';
+        for(var i = 0; i < trackArtists.length - 1; i++){
+            featuredArtists += trackArtists[i] + ' & ';
+        }
+        featuredArtists += trackArtists[trackArtists.length - 1] + ')';
+    }
+
+   return featuredArtists;
+}
+
+function getTracklist(fullAlbumDetails){
+    let tracklist = '';
+    const tracks = fullAlbumDetails.tracks.items;
+
+    for(var i = 0; i < tracks.length; i++){
+        tracklist += (i+1) + '. ' + tracks[i].name;
+        if(tracks[i].artists.length > 1 && !tracks[i].name.toLowerCase().includes('remix')){
+            const artists = tracks[i].artists;
+            tracklist += ' (w/ ';
+            for(var j = 1; j < artists.length - 1; j++){
+                tracklist += artists[j].name + ' & ';
+            }
+            tracklist += artists[artists.length - 1].name + ')'; 
+        }
+        tracklist += '\n';
+    }
+
+    return tracklist;
 }
 
 async function checkNewReleases(guild){
@@ -23,9 +134,8 @@ async function checkNewReleases(guild){
         if(newestAlbum !== ''){
             if(artists[i].idLatestRelease !== newestAlbum.id){
                 db.updateLatestRelease(artists[i].idArtist, newestAlbum.id, guild._id);
-                const message = await createMessage(newestAlbum);
-                if(!artistsNewReleases.includes(message)){
-                    artistsNewReleases.push(message);
+                if(!artistsNewReleases.some(obj => obj.uri === newestAlbum.uri)){
+                    artistsNewReleases.push(newestAlbum);
                 }
             }
         }
@@ -47,72 +157,6 @@ async function getLatestRelease(artists, number){
     }
 }
 
-async function createMessage(album){
-    const albumArtists = album.artists.filter(artist => {
-        if(!album.name.includes(artist.name)){
-            return artist.name
-        }
-    }).map(artist => artist.name);                      
-    var artistNames = '';
-
-    for(var i = 0; i < albumArtists.length - 1; i++){
-        artistNames += albumArtists[i] + ' & ';
-    }
-
-    artistNames += albumArtists[albumArtists.length - 1];
-
-    const result = await axios.get(album.href, spotify.getAuthOptions());
-    const fullAlbum = result.data;
-
-    if(fullAlbum.total_tracks > 1){
-        var latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ';
-        const splitDate = album.release_date.split('-');
-        const releaseDate = splitDate[2] + '/' + splitDate[1] + '/' + splitDate[0];
-        latestRelease += releaseDate + '\n\n';
-
-        var tracklist = "";
-        const tracks = fullAlbum.tracks.items;
-
-        for(var i = 0; i < tracks.length; i++){
-            tracklist += (i+1) + '. ' + tracks[i].name;
-            if(tracks[i].artists.length > 1 && !tracks[i].name.toLowerCase().includes('remix')){
-                const artists = tracks[i].artists;
-                tracklist += ' (w/ ';
-                for(var j = 1; j < artists.length - 1; j++){
-                    tracklist += artists[j].name + ' & ';
-                }
-                tracklist += artists[artists.length - 1].name + ')'; 
-            }
-            tracklist += '\n';
-        }
-
-        latestRelease += 'Tracklist:\n' + tracklist + '\n' + album.external_urls.spotify;
-        return latestRelease;
-    } else {
-        const trackArtists = fullAlbum.tracks.items[0].artists.filter(artist => {
-            if(!albumArtists.includes(artist.name) && !fullAlbum.name.includes(artist.name)){
-                return artist.name
-            }
-        }).map(artist => artist.name);
-
-       if(trackArtists.length > 0){
-           artistNames += ' (ft. ';
-           for(var i = 0; i < trackArtists.length - 1; i++){
-               artistNames += trackArtists[i] + ' & ';
-           }
-           artistNames += trackArtists[trackArtists.length - 1] + ')';
-       }
-
-        var latestRelease = '__**' + artistNames + ' - ' + album.name + '**__\n\nLabel: ' + fullAlbum.label + '\nRelease Date: ';
-        const splitDate = album.release_date.split('-');
-        const releaseDate = splitDate[2] + '/' + splitDate[1] + '/' + splitDate[0];
-        latestRelease += releaseDate + '\n\n';
-
-        latestRelease += fullAlbum.tracks.items[0].external_urls.spotify;
-        return latestRelease;
-    }
-}
-
 function sendNewReleases(messages, channel){
     for(var i = 0; i < messages.length; i++){
         channel.send(messages[i]).then( lstMsg => {
@@ -127,3 +171,4 @@ exports.createMessageNewReleases = createMessageNewReleases;
 exports.checkNewReleases = checkNewReleases;
 exports.sendNewReleases = sendNewReleases;
 exports.getLatestRelease = getLatestRelease;
+exports.createEmbeds = createEmbeds;
