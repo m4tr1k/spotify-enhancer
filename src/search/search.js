@@ -43,10 +43,9 @@ async function selectArtistsByName(artists, arrayIndex){
         const msgReply = await msgDiscord.reply('Which "_' + artistName + '_" are you looking for? (React with ✅ on the desired artist)');
         const artistDetails = await buildMessage(possibleArtists, 0);
 
-        await sendMessage(artistDetails, msgDiscord);
+        const result = await Promise.all([sendMessage(artistDetails, msgDiscord), await chooseArtist(possibleArtists, 0, msgDiscord)])
 
-        const artistID = await chooseArtist(possibleArtists, 0, msgDiscord);
-
+        const artistID = result.map(value => value)[1];
         await msgReply.delete();
         artists[number] = artistID;
     } else {

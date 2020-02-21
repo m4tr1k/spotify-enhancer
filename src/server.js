@@ -47,8 +47,8 @@ async function createChannel(guild, createdRole){
     return new Promise ( res => {
         const everyoneRole = guild.roles.find(role => role.name === '@everyone');
 
-        if(!guild.channels.array().some(channel => channel.name === '🎵new-releases')){
-            guild.createChannel('🎵new-releases', { 
+        if(!guild.channels.array().some(channel => channel.name === 'new-releases')){
+            guild.createChannel('new-releases', { 
                 type: 'text',
                 topic: 'Check the new releases from your favourite artists here 🤟',
                 permissionOverwrites: [
@@ -69,7 +69,7 @@ async function createChannel(guild, createdRole){
                 db.insertGuildDB(guild.id, channel.id);
             })
         } else {
-            const channel = guild.channels.array().find(channel => channel.name === '🎵new-releases');
+            const channel = guild.channels.array().find(channel => channel.name === 'new-releases');
             db.insertGuildDB(guild.id, channel.id);
             channel.edit({
                 permissionOverwrites: [

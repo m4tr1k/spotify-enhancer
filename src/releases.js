@@ -29,10 +29,10 @@ async function createEmbeds(albums){
         let description;
         let title;
         if(fullAlbumDetails.total_tracks > 1){
-            const tracklist = getTracklist(fullAlbumDetails);
+            const tracklist = getTracklist(fullAlbumDetails, artists);
             const link = album.external_urls.spotify;
             title = artists + ' - ' + nameAlbum;
-            description = label + '\n' + releaseDate + '\n\nTracklist:\n' + tracklist + '\n[Spotify Link](' + link + ')'; 
+            description = label + '\n' + releaseDate + '\n\nTracklist:\n' + tracklist + '\n[🎧 Spotify Link](' + link + ')'; 
         } else {
             const featuredArtists = getFeaturedArtists(fullAlbumDetails, artists)
             if(featuredArtists !== undefined){
@@ -105,19 +105,25 @@ function getFeaturedArtists(fullAlbumDetails, artists){
    return featuredArtists;
 }
 
-function getTracklist(fullAlbumDetails){
+function getTracklist(fullAlbumDetails, titleArtists){
     let tracklist = '';
     const tracks = fullAlbumDetails.tracks.items;
 
     for(var i = 0; i < tracks.length; i++){
         tracklist += (i+1) + '. ' + tracks[i].name;
         if(tracks[i].artists.length > 1 && !tracks[i].name.toLowerCase().includes('remix')){
-            const artists = tracks[i].artists;
-            tracklist += ' (w/ ';
-            for(var j = 1; j < artists.length - 1; j++){
-                tracklist += artists[j].name + ' & ';
+            const artistNames = tracks[i].artists.filter(artist => {
+                if(!titleArtists.includes(artist.name)){
+                    return artist.name
+                }
+            }).map(artist => artist.name);
+            if(artistNames.length !== 0){
+                tracklist += ' (w/ ';
+                for(var j = 1; j < artistNames.length - 1; j++){
+                    tracklist += artistNames[j] + ' & ';
+                }
+                tracklist += artistNames[artistNames.length - 1] + ')';
             }
-            tracklist += artists[artists.length - 1].name + ')'; 
         }
         tracklist += '\n';
     }
