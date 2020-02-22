@@ -69,14 +69,17 @@ discordClient.on('message', msg => {
             if(msg.content.startsWith(prefix + '+')){
               var artists = msg.content.replace(prefix + '+', "").split(',').map(item => item.trim());
               search.searchArtists(artists, msg).then( artistsIds => {
+                msg.delete();
                 checkReleases.addArtistsToGuild(artistsIds, cursor);
               })
             } else if (msg.content.startsWith(prefix + '-')) {
               var artists = msg.content.replace(prefix + '-', "").split(',').map(item => item.trim());
               search.searchArtists(artists, msg).then( artistsIds => {
+                msg.delete();
                 checkReleases.removeArtistsGuild(artistsIds, cursor);
               })
             } else {
+              msg.delete();
               msg.reply("I don't know if you want to add or remove artists from automatic search...");
             }
           } else {

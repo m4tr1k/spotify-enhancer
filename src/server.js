@@ -18,7 +18,7 @@ async function createNewReleasesChannel(guild, msg){
                 createRole(guild).then(role => {
                     createChannel(guild, role).then( () => {
                         discordClient.users.get(guild.ownerID)
-                        .send("Nice to hear that 😄\n\n__**Some things to keep in mind:**__\n\n-> Anyone can add or remove artists with the new role 'New Releases Manager' *(and admins of course)*\n-> The new releases will be posted in '🎵new-releases'\n\nEveryday I will check if your favourite artists have new releases\nIn the meantime, you can still use my features to search the latest release of any artist\n\nI hope to enhance your spotify experience 🧡\nBest regards,\n_Spotify Enhancer_")
+                        .send("Nice to hear that 😄\n\n__**Some things to keep in mind:**__\n\n-> Anyone can add or remove artists with the new role 'New Releases Manager' *(and admins of course)*\n-> The new releases will be posted in 'new-releases'\n\nEveryday I will check if your favourite artists have new releases\nIn the meantime, you can still use my features to search the latest release of any artist\n\nI hope to enhance your spotify experience 🧡\nBest regards,\n_Spotify Enhancer_")
                         .then(() => resolve());
                     })
                 })

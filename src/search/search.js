@@ -46,7 +46,7 @@ async function selectArtistsByName(artists, arrayIndex){
         const result = await Promise.all([sendMessage(artistDetails, msgDiscord), await chooseArtist(possibleArtists, 0, msgDiscord)])
 
         const artistID = result.map(value => value)[1];
-        await msgReply.delete();
+        msgReply.delete();
         artists[number] = artistID;
     } else {
         artists[number] = '';
@@ -88,7 +88,8 @@ async function chooseArtist(possibleArtists, number, msgDiscord){
     return new Promise ( returnArtistID => {
         listener = (reaction, user) => {
             if(reaction.emoji.name === '✅' && info.messageId === reaction.message.id && !user.bot){
-                reaction.message.delete().then(() => returnArtistID(info.artistId))
+                reaction.message.delete()
+                returnArtistID(info.artistId)
             } else if(reaction.emoji.name === '❎' && info.messageId === reaction.message.id && !user.bot){
                 if(number < possibleArtists.length - 1){
                     var aux = ++number;
