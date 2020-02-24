@@ -55,15 +55,18 @@ async function removeGuildDB(idServer){
 
 async function insertArtistsDB(artistsIds, idServer){
     for(var i = 0; i < artistsIds.length; i++){
+        const latestRelease = await releases.getLatestRelease(artistsIds, i);
+        const idLatestRelease = latestRelease.id
+
         const number = await client.collection('guild').find({
             _id: idServer,
             artists: {
-                idArtist: artistsIds[i]
+                idArtist: artistsIds[i],
+                idLatestRelease: idLatestRelease
             }
         }).count();
+        console.log(number);
         if(number === 0){
-            const latestRelease = await releases.getLatestRelease(artistsIds, i);
-            const idLatestRelease = latestRelease.id
             await client.collection('guild').updateOne(
                 {_id: idServer},
                 {

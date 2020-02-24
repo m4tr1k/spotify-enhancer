@@ -11,15 +11,18 @@ var InfoIDs = function(props){
 }
 
 async function searchArtists(artists, msgDiscord){
-    var arrayIndex = [];
-    const artistsNames = await selectArtistsByName(artists, arrayIndex);
+    let artistsIDs = [];
+    const artistsNames = await selectArtistsByName(artists);
     for(var i = 0; i < artistsNames.length; i++){
-        await searchArtistByName(artistsNames[i], artists, msgDiscord, arrayIndex[i]);
+        const artistID = await searchArtistByName(artistsNames[i], msgDiscord);
+        if(artistID !== ''){
+            artistsIDs.push(artistID);
+        }
     }
-    return new Promise ( returnArtistArray => returnArtistArray(artists));
+    return new Promise ( returnArtistArray => returnArtistArray(artistsIDs));
 }
 
-async function selectArtistsByName(artists, arrayIndex){
+async function selectArtistsByName(artists){
     return new Promise(returnArray => {
         var artistsNames = [];
         var aux = 0;
@@ -27,7 +30,6 @@ async function selectArtistsByName(artists, arrayIndex){
             if (artists[i].startsWith("spotify:artist:")) {
                 artists[i] = artists[i].replace("spotify:artist:", "");
             } else {
-                arrayIndex[aux] = i;
                 artistsNames[aux] = artists[i];
                 aux++;
             }
@@ -36,20 +38,26 @@ async function selectArtistsByName(artists, arrayIndex){
     });
 }
 
- async function searchArtistByName(artistName, artists, msgDiscord, number){
+ async function searchArtistByName(artistName, msgDiscord){
     const search = await spotify.spotifyClient.searchArtists(artistName, { limit : 20, offset : 0 });
+    
     const possibleArtists = search.body.artists.items;
+    
     if(possibleArtists.length !== 0){
         const msgReply = await msgDiscord.reply('Which "_' + artistName + '_" are you looking for? (React with ✅ on the desired artist)');
         const artistDetails = await buildMessage(possibleArtists, 0);
-
+    
         const result = await Promise.all([sendMessage(artistDetails, msgDiscord), await chooseArtist(possibleArtists, 0, msgDiscord)])
-
+    
         const artistID = result.map(value => value)[1];
         msgReply.delete();
-        artists[number] = artistID;
+        if(artistID === ''){
+            msgDiscord.reply('It seems that this *' + artistName + '* does not exist...');
+        }
+        return artistID;
     } else {
-        artists[number] = '';
+        msgDiscord.reply('It seems that this *' + artistName + '* does not exist...');
+        return '';    
     }
 }
 
@@ -103,7 +111,7 @@ async function chooseArtist(possibleArtists, number, msgDiscord){
                         })
                     })
                 } else {
-                    returnArtistID('');
+                    reaction.message.delete().then(returnArtistID(''));
                 }
             }
         }
