@@ -77,14 +77,12 @@ discordClient.on('message', msg => {
                 break;
               case '-':
                 var possibleArtists = msg.content.replace(prefix + '-', "").split(',').map(item => item.trim());
-                search.searchArtists(possibleArtists, msg).then( artists => {
-                  msg.delete();
-                  checkReleases.removeArtistsGuild(artists, cursor);
-                })
+                msg.delete();
+                checkReleases.removeArtistsGuild(possibleArtists, cursor);
                 break;
               default:
                 msg.delete();
-                if(msg.content === '!SE artists'){
+                if(msg.content.trim() === '!SE artists'){
                   checkReleases.seeArtistsGuild(cursor);
                 } else {
                   msg.reply("I don't know what you want to do...");

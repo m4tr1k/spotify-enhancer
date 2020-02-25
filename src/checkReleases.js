@@ -25,7 +25,7 @@ async function seeArtistsGuild(cursor){
     if(artists.length === 0){
         message += '*there are no artists registered at the moment...*';
     } else {
-        message += '```' + artists.join('\n') + '```';
+        message += '```\n' + artists.join('\n') + '```';
     }
     channel.send(message);
 }

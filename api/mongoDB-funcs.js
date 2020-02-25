@@ -58,7 +58,8 @@ async function insertArtistsDB(artists, idServer){
             _id: idServer,
             artists: {
                 idArtist: artists[i].artistId,
-                nameArtist: artists[i].artistName
+                nameArtist: artists[i].artistName,
+                nameArtist_lowerCase: artists[i].artistName.toLowerCase()
             }
         }).count();
         console.log(number);
@@ -69,7 +70,8 @@ async function insertArtistsDB(artists, idServer){
                     $push: { artists: 
                         { 
                             idArtist: artists[i].artistId,
-                            nameArtist: artists[i].artistName
+                            nameArtist: artists[i].artistName,
+                            nameArtist_lowerCase: artists[i].artistName.toLowerCase()
                         } 
                     } 
                 }
@@ -78,14 +80,14 @@ async function insertArtistsDB(artists, idServer){
     }
 }
 
-async function removeArtistsDB(artists, idServer){
-    for(var i = 0; i < artists.length; i++){
+async function removeArtistsDB(artistNames, idServer){
+    for(var i = 0; i < artistNames.length; i++){
         await client.collection('guild').updateOne(
             {_id: idServer},
             {
                 $pull: { artists: 
                     {
-                        idArtist: artists[i].artistId
+                        nameArtist_lowerCase: artistNames[i].toLowerCase()
                     }
                 }
             }
