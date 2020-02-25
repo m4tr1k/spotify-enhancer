@@ -67,26 +67,34 @@ discordClient.on('message', msg => {
       checkReleases.verifyNewReleasesChannel(msg.channel.id).then(cursor => {
         cursor.hasNext().then( result => {
           if(result){
-            if(msg.content.startsWith(prefix + '+')){
-              var artists = msg.content.replace(prefix + '+', "").split(',').map(item => item.trim());
-              search.searchArtists(artists, msg).then( artistsIds => {
+            switch(msg.content.substring(3, 4)){
+              case '+': 
+                var possibleArtists = msg.content.replace(prefix + '+', "").split(',').map(item => item.trim());
+                search.searchArtists(possibleArtists, msg).then( artists => {
+                  msg.delete();
+                  checkReleases.addArtistsToGuild(artists, cursor);
+                })
+                break;
+              case '-':
+                var possibleArtists = msg.content.replace(prefix + '-', "").split(',').map(item => item.trim());
+                search.searchArtists(possibleArtists, msg).then( artists => {
+                  msg.delete();
+                  checkReleases.removeArtistsGuild(artists, cursor);
+                })
+                break;
+              default:
                 msg.delete();
-                checkReleases.addArtistsToGuild(artistsIds, cursor);
-              })
-            } else if (msg.content.startsWith(prefix + '-')) {
-              var artists = msg.content.replace(prefix + '-', "").split(',').map(item => item.trim());
-              search.searchArtists(artists, msg).then( artistsIds => {
-                msg.delete();
-                checkReleases.removeArtistsGuild(artistsIds, cursor);
-              })
-            } else {
-              msg.delete();
-              msg.reply("I don't know if you want to add or remove artists from automatic search...");
+                if(msg.content === '!SE artists'){
+                  checkReleases.seeArtistsGuild(cursor);
+                } else {
+                  msg.reply("I don't know what you want to do...");
+                }
+                break;
             }
           } else {
             var artists = msg.content.replace(prefix, "").split(',').map(item => item.trim());
-            search.searchArtists(artists, msg).then( artistsIds => {
-              newReleases.createMessageNewReleases(artistsIds, msg.channel);
+            search.searchArtists(artists, msg).then( artists => {
+              newReleases.createMessageNewReleases(artists, msg.channel);
             })
           }
         })

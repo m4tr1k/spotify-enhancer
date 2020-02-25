@@ -52,12 +52,13 @@ async function removeGuildDB(idServer){
     }
 }
 
-async function insertArtistsDB(artistsIds, idServer){
-    for(var i = 0; i < artistsIds.length; i++){
+async function insertArtistsDB(artists, idServer){
+    for(var i = 0; i < artists.length; i++){
         const number = await client.collection('guild').find({
             _id: idServer,
             artists: {
-                idArtist: artistsIds[i]
+                idArtist: artists[i].artistId,
+                nameArtist: artists[i].artistName
             }
         }).count();
         console.log(number);
@@ -67,7 +68,8 @@ async function insertArtistsDB(artistsIds, idServer){
                 {
                     $push: { artists: 
                         { 
-                            idArtist: artistsIds[i]
+                            idArtist: artists[i].artistId,
+                            nameArtist: artists[i].artistName
                         } 
                     } 
                 }
@@ -76,14 +78,14 @@ async function insertArtistsDB(artistsIds, idServer){
     }
 }
 
-async function removeArtistsDB(artistsIds, idServer){
-    for(var i = 0; i < artistsIds.length; i++){
+async function removeArtistsDB(artists, idServer){
+    for(var i = 0; i < artists.length; i++){
         await client.collection('guild').updateOne(
             {_id: idServer},
             {
                 $pull: { artists: 
                     {
-                        idArtist: artistsIds[i]
+                        idArtist: artists[i].artistId
                     }
                 }
             }

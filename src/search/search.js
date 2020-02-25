@@ -7,6 +7,7 @@ var listener;
 
 var InfoIDs = function(props){
     this.artistId = props.artistId;
+    this.artistName = props.artistName;
     this.messageId = props.messageId;
 }
 
@@ -14,9 +15,9 @@ async function searchArtists(artists, msgDiscord){
     let artistsIDs = [];
     const artistsNames = await selectArtistsByName(artists);
     for(var i = 0; i < artistsNames.length; i++){
-        const artistID = await searchArtistByName(artistsNames[i], msgDiscord);
-        if(artistID !== ''){
-            artistsIDs.push(artistID);
+        const artist = await searchArtistByName(artistsNames[i], msgDiscord);
+        if(artist !== null){
+            artistsIDs.push(artist);
         }
     }
     return new Promise ( returnArtistArray => returnArtistArray(artistsIDs));
@@ -70,6 +71,7 @@ async function buildMessage(possibleArtists, number){
         const currentArtist = possibleArtists[number];
         info = new InfoIDs({
             artistId: currentArtist.id,
+            artistName: currentArtist.name,
             messageId: ''
         })
         var artistDetails = '**' + currentArtist.name + '** (' + currentArtist.external_urls.spotify + ')' + '\nGenres: ';
@@ -97,21 +99,21 @@ async function chooseArtist(possibleArtists, number, msgDiscord){
         listener = (reaction, user) => {
             if(reaction.emoji.name === '✅' && info.messageId === reaction.message.id && !user.bot){
                 reaction.message.delete()
-                returnArtistID(info.artistId)
+                returnArtistID(info)
             } else if(reaction.emoji.name === '❎' && info.messageId === reaction.message.id && !user.bot){
                 if(number < possibleArtists.length - 1){
                     var aux = ++number;
                     reaction.message.delete().then(() => {
                         buildMessage(possibleArtists, aux).then( artistDetails => {
                             sendMessage(artistDetails, msgDiscord).then( () => {
-                                chooseArtist(possibleArtists, aux, msgDiscord).then( artistID => {
-                                    returnArtistID(artistID)
+                                chooseArtist(possibleArtists, aux, msgDiscord).then( result => {
+                                    returnArtistID(result)
                                 })
                             })
                         })
                     })
                 } else {
-                    reaction.message.delete().then(returnArtistID(''));
+                    reaction.message.delete().then(returnArtistID(null));
                 }
             }
         }

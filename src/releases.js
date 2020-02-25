@@ -1,12 +1,11 @@
 const axios = require('axios');
 const Discord = require('discord.js');
 const spotify = require('../api/spotify-properties').client;
-const db = require('../api/mongoDB-funcs')
 
-async function createMessageNewReleases(artistsIds, channel){
+async function createMessageNewReleases(artists, channel){
     const albums = [];
-    for(var i = 0; i < artistsIds.length; i++){
-        const album = await getLatestRelease(artistsIds, i);
+    for(var i = 0; i < artists.length; i++){
+        const album = await getLatestRelease(artists, i);
         if(!albums.some(obj => obj.uri === album.uri)){
             albums.push(album);
         }
@@ -151,7 +150,7 @@ async function checkNewReleases(guild){
 }
 
 async function getLatestRelease(artists, number){
-    const dataAlbums = await spotify.spotifyClient.getArtistAlbums(artists[number], {offset: 0, include_groups: 'album,single'})
+    const dataAlbums = await spotify.spotifyClient.getArtistAlbums(artists[number].artistId, {offset: 0, include_groups: 'album,single'})
     if(dataAlbums.body.items.length !== 0){
         const result = await axios.get(dataAlbums.body.href, spotify.getAuthOptions());
         const albums = result.data.items;
