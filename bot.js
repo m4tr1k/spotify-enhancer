@@ -33,11 +33,12 @@ discordClient.on('ready', () => {
           console.log('Something went wrong!', err);
       }).then( () => {
         var localTime = new Date();
-        var timeUntilCheck = new Date(localTime.getFullYear(), localTime.getMonth(), localTime.getDate(), 11, 0, 0, 0) - localTime;
+        var timeUntilCheck = new Date(localTime.getFullYear(), localTime.getMonth(), localTime.getDate(), 11, 29, 0, 0) - localTime;
         if(timeUntilCheck > 0){
-          setTimeout(() => {sendNewReleases(), setInterval(86400000)}, timeUntilCheck);
+          console.log(timeUntilCheck);
+          setTimeout(() => {sendNewReleases(), setInterval(() => sendNewReleases(), 86400000)}, timeUntilCheck);
         } else {
-          setInterval(sendNewReleases, 86400000)
+          setInterval(() => sendNewReleases(), 86400000)
         }
         setInterval(refreshToken, 3600000);
       })

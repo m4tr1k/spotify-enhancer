@@ -111,9 +111,10 @@ async function updateLatestRelease(idArtist, updatedIdRelease, idServer){
                 idArtist: idArtist
             }
         },
-        {
-            artists: {
-                idLatestRelease: updatedIdRelease
+        { $set: {
+                artists: {
+                    idLatestRelease: updatedIdRelease
+                }
             }
         }
     )
