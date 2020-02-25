@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
-const client = mongoose.connection
-const releases = require('../src/releases');
+const client = mongoose.connection;
 
 async function newConnection(){
     await mongoose.connect('mongodb://localhost:27017/spotify-enhancer', {useNewUrlParser: true, useUnifiedTopology: true});
@@ -55,14 +54,10 @@ async function removeGuildDB(idServer){
 
 async function insertArtistsDB(artistsIds, idServer){
     for(var i = 0; i < artistsIds.length; i++){
-        const latestRelease = await releases.getLatestRelease(artistsIds, i);
-        const idLatestRelease = latestRelease.id
-
         const number = await client.collection('guild').find({
             _id: idServer,
             artists: {
-                idArtist: artistsIds[i],
-                idLatestRelease: idLatestRelease
+                idArtist: artistsIds[i]
             }
         }).count();
         console.log(number);
@@ -72,8 +67,7 @@ async function insertArtistsDB(artistsIds, idServer){
                 {
                     $push: { artists: 
                         { 
-                            idArtist: artistsIds[i],
-                            idLatestRelease: idLatestRelease
+                            idArtist: artistsIds[i]
                         } 
                     } 
                 }
@@ -103,28 +97,10 @@ async function getAllGuilds(){
     return cursor;
 }
 
-async function updateLatestRelease(idArtist, updatedIdRelease, idServer){
-    await client.collection('guild').updateOne(
-        {
-            _id: idServer,
-            artists: {
-                idArtist: idArtist
-            }
-        },
-        { $set: {
-                artists: {
-                    idLatestRelease: updatedIdRelease
-                }
-            }
-        }
-    )
-}
-
 exports.insertGuildDB = insertGuildDB
 exports.removeGuildDB = removeGuildDB
 exports.insertArtistsDB = insertArtistsDB
 exports.findChannel = findChannel
 exports.client = client
 exports.getAllGuilds = getAllGuilds
-exports.updateLatestRelease = updateLatestRelease
 exports.removeArtistsDB = removeArtistsDB

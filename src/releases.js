@@ -132,14 +132,15 @@ function getTracklist(fullAlbumDetails, titleArtists){
 }
 
 async function checkNewReleases(guild){
+    const currentDate = new Date();
     const artistsNewReleases = [];
     const artists = guild.artists;
     const artistsIds = artists.map(artist => artist.idArtist);
     for(var i = 0; i < artists.length; i++){     
         const newestAlbum = await getLatestRelease(artistsIds, i);
         if(newestAlbum !== ''){
-            if(artists[i].idLatestRelease !== newestAlbum.id){
-                db.updateLatestRelease(artists[i].idArtist, newestAlbum.id, guild._id);
+            const releaseDate = Date.parse(newestAlbum.release_date);
+            if(releaseDate >= currentDate){
                 if(!artistsNewReleases.some(obj => obj.uri === newestAlbum.uri)){
                     artistsNewReleases.push(newestAlbum);
                 }
