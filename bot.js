@@ -91,8 +91,8 @@ discordClient.on('message', msg => {
             }
           } else {
             var artists = msg.content.replace(prefix, "").split(',').map(item => item.trim());
-            search.searchArtists(artists, msg).then( artists => {
-              newReleases.createMessageNewReleases(artists, msg.channel);
+            search.searchArtists(artists, msg).then( infoIds => {
+              newReleases.createMessageNewReleases(infoIds, msg.channel);
             })
           }
         })

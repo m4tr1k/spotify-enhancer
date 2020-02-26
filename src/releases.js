@@ -2,8 +2,9 @@ const axios = require('axios');
 const Discord = require('discord.js');
 const spotify = require('../api/spotify-properties').client;
 
-async function createMessageNewReleases(artists, channel){
+async function createMessageNewReleases(infoIds, channel){
     const albums = [];
+    const artists = infoIds.map(infoId => infoId.artistId);
     for(var i = 0; i < artists.length; i++){
         const album = await getLatestRelease(artists, i);
         if(!albums.some(obj => obj.uri === album.uri)){
@@ -23,21 +24,21 @@ async function createEmbeds(albums){
         const nameAlbum = album.name;
         const label = 'Label: ' + fullAlbumDetails.label;
         const splitDate = album.release_date.split('-');
-        const releaseDate = 'Release Date: ' + splitDate[2] + '/' + splitDate[1] + '/' + splitDate[0];
+        const releaseDate = 'Release Date: ' + splitDate[2] + '-' + splitDate[1] + '-' + splitDate[0];
         
         let description;
         let title;
         if(fullAlbumDetails.total_tracks > 1){
             const tracklist = getTracklist(fullAlbumDetails, artists);
             const link = album.external_urls.spotify;
-            title = artists + ' - ' + nameAlbum;
+            title = artists + '\n' + nameAlbum;
             description = label + '\n' + releaseDate + '\n\nTracklist:\n' + tracklist + '\n[🎧 Spotify Link](' + link + ')'; 
         } else {
             const featuredArtists = getFeaturedArtists(fullAlbumDetails, artists)
             if(featuredArtists !== undefined){
-                title = artists + ' ' + featuredArtists + ' - ' + nameAlbum;
+                title = artists + ' ' + featuredArtists + '\n' + nameAlbum;
             } else {
-                title = artists + ' - ' + nameAlbum;
+                title = artists + '\n' + nameAlbum;
             }
             const link = fullAlbumDetails.tracks.items[0].external_urls.spotify;
             
@@ -139,7 +140,7 @@ async function checkNewReleases(guild){
         const newestAlbum = await getLatestRelease(artistsIds, i);
         if(newestAlbum !== ''){
             const releaseDate = Date.parse(newestAlbum.release_date);
-            if(releaseDate >= currentDate){
+            if(releaseDate > currentDate){
                 if(!artistsNewReleases.some(obj => obj.uri === newestAlbum.uri)){
                     artistsNewReleases.push(newestAlbum);
                 }
@@ -150,7 +151,7 @@ async function checkNewReleases(guild){
 }
 
 async function getLatestRelease(artists, number){
-    const dataAlbums = await spotify.spotifyClient.getArtistAlbums(artists[number].artistId, {offset: 0, include_groups: 'album,single'})
+    const dataAlbums = await spotify.spotifyClient.getArtistAlbums(artists[number], {offset: 0, include_groups: 'album,single'})
     if(dataAlbums.body.items.length !== 0){
         const result = await axios.get(dataAlbums.body.href, spotify.getAuthOptions());
         const albums = result.data.items;
