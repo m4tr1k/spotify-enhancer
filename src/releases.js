@@ -140,12 +140,10 @@ async function checkNewReleases(guild){
 async function getLatestRelease(artists, number){
     const dataAlbums = await spotify.spotifyClient.getArtistAlbums(artists[number], {offset: 0, include_groups: 'album,single'})
     if(dataAlbums.body.items.length !== 0){
-        const result = await axios.get(dataAlbums.body.href, spotify.getAuthOptions());
-        const albums = result.data.items;
-        albums.sort((a, b) => a.release_date.localeCompare(b.release_date));
-        albums.reverse();
+        dataAlbums.body.items.sort((a, b) => a.release_date.localeCompare(b.release_date));
+        dataAlbums.body.items.reverse();
 
-        return albums[0];
+        return dataAlbums.body.items[0];
     } else {
         return '';
     }
