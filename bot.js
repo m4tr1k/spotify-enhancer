@@ -1,5 +1,6 @@
 const express = require('express');
 const discordClient = require('./api/discord-properties').discordClient;
+const pastebin = require('./api/pastebin-properties');
 const spotify = require('./api/spotify-properties').client;
 const auth = require('./auth.json');
 
@@ -26,6 +27,7 @@ discordClient.on('ready', () => {
         data => {
           spotify.spotifyClient.setAccessToken(data.body['access_token']);
           spotify.spotifyClient.setRefreshToken(data.body['refresh_token']);
+          pastebin.loginPastebin();
 
           console.log(`Spotify connection working...`);
         },
@@ -81,9 +83,8 @@ discordClient.on('message', msg => {
                 checkReleases.removeArtistsGuild(possibleArtists, cursor);
                 break;
               default:
-                msg.delete();
                 if(msg.content.trim() === '!SE artists'){
-                  checkReleases.seeArtistsGuild(cursor);
+                  checkReleases.seeArtistsGuild(cursor)
                 } else {
                   msg.reply("I don't know what you want to do...");
                 }

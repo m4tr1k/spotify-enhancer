@@ -1,6 +1,7 @@
 const db = require('../api/mongoDB-funcs');
 const releases = require('./releases');
 const discordClient = require('../api/discord-properties').discordClient;
+const pastebin = require('../api/pastebin-properties');
 
 async function verifyNewReleasesChannel(idChannel){
     const isNewReleasesChannel = await db.findChannel(idChannel);
@@ -18,16 +19,16 @@ async function removeArtistsGuild(artists, cursor){
 }
 
 async function seeArtistsGuild(cursor){
-    let message = 'Artists registered on this server:\n';
+    let message = '';
     const guild = await cursor.next();
     const channel = discordClient.channels.find(channel => channel.id === guild.idReleasesChannel);
     const artists = guild.artists.map(artist => artist.nameArtist);
     if(artists.length === 0){
-        message += '*there are no artists registered at the moment...*';
+        message += 'there are no artists registered at the moment...';
     } else {
-        message += '```\n' + artists.join('\n') + '```';
+        message += artists.join('\n');
     }
-    channel.send(message);
+    pastebin.editPaste(message, guild, channel);
 }
 
 async function sendNewReleases(){
