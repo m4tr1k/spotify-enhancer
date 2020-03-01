@@ -2,19 +2,6 @@ const axios = require('axios');
 const Discord = require('discord.js');
 const spotify = require('../api/spotify-properties').client;
 
-async function createMessageNewReleases(infoIds, channel){
-    const albums = [];
-    const artists = infoIds.map(infoId => infoId.artistId);
-    for(var i = 0; i < artists.length; i++){
-        const album = await getLatestRelease(artists, i);
-        if(!albums.some(obj => obj.uri === album.uri)){
-            albums.push(album);
-        }
-    }
-    const messages = await createEmbeds(albums);
-    sendNewReleases(messages, channel);
-}
-
 async function createEmbeds(albums){
     var messages = [];
     for(var i = 0; i < albums.length; i++){
@@ -29,9 +16,9 @@ async function createEmbeds(albums){
         let description;
         let title;
         if(fullAlbumDetails.total_tracks > 1){
-            const tracklist = getTracklist(fullAlbumDetails, artists);
-            const link = album.external_urls.spotify;
             title = artists + '\n' + nameAlbum;
+            const tracklist = getTracklist(fullAlbumDetails, artists, title);
+            const link = album.external_urls.spotify;
             description = label + '\n' + releaseDate + '\n\nTracklist:\n' + tracklist + '\n[🎧 Spotify Link](' + link + ')'; 
         } else {
             const featuredArtists = getFeaturedArtists(fullAlbumDetails, artists)
@@ -105,7 +92,7 @@ function getFeaturedArtists(fullAlbumDetails, artists){
    return featuredArtists;
 }
 
-function getTracklist(fullAlbumDetails, titleArtists){
+function getTracklist(fullAlbumDetails, titleArtists, title){
     let tracklist = '';
     const tracks = fullAlbumDetails.tracks.items;
 
@@ -113,7 +100,7 @@ function getTracklist(fullAlbumDetails, titleArtists){
         tracklist += (i+1) + '. ' + tracks[i].name;
         if(tracks[i].artists.length > 1 && !tracks[i].name.toLowerCase().includes('remix')){
             const artistNames = tracks[i].artists.filter(artist => {
-                if(!titleArtists.includes(artist.name)){
+                if(!titleArtists.includes(artist.name) && !title.includes(artist.name)){
                     return artist.name
                 }
             }).map(artist => artist.name);
@@ -174,7 +161,6 @@ function sendNewReleases(messages, channel){
     }
 }
 
-exports.createMessageNewReleases = createMessageNewReleases;
 exports.checkNewReleases = checkNewReleases;
 exports.sendNewReleases = sendNewReleases;
 exports.getLatestRelease = getLatestRelease;

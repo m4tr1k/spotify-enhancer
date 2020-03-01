@@ -89,15 +89,9 @@ discordClient.on('message', msg => {
                 }
                 break;
             }
-          } else {
-            var artists = msg.content.replace(prefix, "").split(',').map(item => item.trim());
-            search.searchArtists(artists, msg).then( infoIds => {
-              newReleases.createMessageNewReleases(infoIds, msg.channel);
-            })
           }
         })
       })
-      
     }   
 });
 
