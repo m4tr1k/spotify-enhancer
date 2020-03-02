@@ -14,7 +14,7 @@ async function checkConnection(){
 async function findChannel(idChannel){
     await checkConnection();
     const cursor = await client.db.collection('guild').find({
-        idReleasesChannel: idChannel
+        idReleasesCommandsChannel: idChannel
     });
     return cursor
 }

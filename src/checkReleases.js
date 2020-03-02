@@ -3,9 +3,9 @@ const releases = require('./releases');
 const discordClient = require('../api/discord-properties').discordClient;
 const pastebin = require('../api/pastebin-properties');
 
-async function verifyNewReleasesChannel(idChannel){
-    const isNewReleasesChannel = await db.findChannel(idChannel);
-    return isNewReleasesChannel;
+async function verifyNewReleasesCommandsChannel(idChannel){
+    const isNewReleasesCommandsChannel = await db.findChannel(idChannel);
+    return isNewReleasesCommandsChannel;
 }
 
 async function addArtistsToGuild(artists, cursor){
@@ -45,7 +45,7 @@ async function sendNewReleases(){
     })
 }
 
-exports.verifyNewReleasesChannel = verifyNewReleasesChannel;
+exports.verifyNewReleasesCommandsChannel = verifyNewReleasesCommandsChannel;
 exports.addArtistsToGuild = addArtistsToGuild;
 exports.sendNewReleases = sendNewReleases;
 exports.removeArtistsGuild = removeArtistsGuild;

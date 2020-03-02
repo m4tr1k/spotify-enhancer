@@ -66,7 +66,7 @@ function refreshToken(){
 
 discordClient.on('message', msg => {
     if(msg.content.startsWith(prefix)) {
-      checkReleases.verifyNewReleasesChannel(msg.channel.id).then(cursor => {
+      checkReleases.verifyNewReleasesCommandsChannel(msg.channel.id).then(cursor => {
         cursor.hasNext().then( result => {
           if(result){
             switch(msg.content.substring(3, 4)){
