@@ -4,7 +4,7 @@ var mongo = require('./mongoDB-funcs').client;
 
 var Options = function(message){
     this.contents = message;
-    this.privacy = 2;
+    this.privacy = 1;
     this.name = "Artists registered on the server";
 }
 

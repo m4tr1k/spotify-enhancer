@@ -21,7 +21,7 @@ async function removeArtistsGuild(artists, cursor){
 async function seeArtistsGuild(cursor){
     let message = '';
     const guild = await cursor.next();
-    const channel = discordClient.channels.find(channel => channel.id === guild.idReleasesChannel);
+    const channel = discordClient.channels.find(channel => channel.id === guild.idReleasesCommandsChannel);
     const artists = guild.artists.map(artist => artist.nameArtist);
     if(artists.length === 0){
         message += 'there are no artists registered at the moment...';

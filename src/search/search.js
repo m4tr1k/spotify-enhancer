@@ -13,30 +13,24 @@ var InfoIDs = function(props){
 
 async function searchArtists(artists, msgDiscord){
     let artistsIDs = [];
-    const artistsNames = await selectArtistsByName(artists);
-    for(var i = 0; i < artistsNames.length; i++){
-        const artist = await searchArtistByName(artistsNames[i], msgDiscord);
-        if(artist !== null){
-            artistsIDs.push(artist);
-        }
+    for(var i = 0; i < artists.length; i++){
+        if(artists[i].startsWith("spotify:artist:")){
+            const id = artists[i].replace("spotify:artist:", "");
+            const artist = await spotify.spotifyClient.getArtist(id);
+            info = new InfoIDs({
+                artistId: id,
+                artistName: artist.body.name
+            })
+            artistsIDs.push(info);
+        } else {
+            const artist = await searchArtistByName(artists[i], msgDiscord);
+            if(artist !== null){
+                console.log(artist);
+                artistsIDs.push(artist);
+            }
+        } 
     }
     return new Promise ( returnArtistArray => returnArtistArray(artistsIDs));
-}
-
-async function selectArtistsByName(artists){
-    return new Promise(returnArray => {
-        var artistsNames = [];
-        var aux = 0;
-        for (var i = 0; i < artists.length; i++) {
-            if (artists[i].startsWith("spotify:artist:")) {
-                artists[i] = artists[i].replace("spotify:artist:", "");
-            } else {
-                artistsNames[aux] = artists[i];
-                aux++;
-            }
-        }
-        returnArray(artistsNames);
-    });
 }
 
  async function searchArtistByName(artistName, msgDiscord){
@@ -52,7 +46,7 @@ async function selectArtistsByName(artists){
     
         const artistID = result.map(value => value)[1];
         msgReply.delete();
-        if(artistID === ''){
+        if(artistID === null){
             msgDiscord.reply('It seems that this *' + artistName + '* does not exist...');
         }
         return artistID;

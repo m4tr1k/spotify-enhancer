@@ -83,7 +83,7 @@ discordClient.on('message', msg => {
                 checkReleases.removeArtistsGuild(possibleArtists, cursor);
                 break;
               default:
-                if(msg.content.trim() === '!SE artists'){
+                if(msg.content.split(' ')[1].toLowerCase() === 'artists'){
                   checkReleases.seeArtistsGuild(cursor)
                 } else {
                   msg.reply("I don't know what you want to do...");
