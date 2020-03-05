@@ -18,7 +18,7 @@ function loginPastebin(){
     })
 }
 
-async function editPaste(message, guild, channel){
+async function editPaste(message, guild){
     var options = new Options(message);
     if(!guild.hasOwnProperty('idPaste')){
         pastebin.create(options, (success, data) => {
@@ -27,15 +27,10 @@ async function editPaste(message, guild, channel){
                     {_id: guild._id},
                     {$set: {idPaste: data}}
                 )
-                channel.send('You can check the artist registered in this server here: ' + data);
             }
         })
     } else {
-        pastebin.edit(guild.idPaste, options, (success) => {
-            if(success){
-                channel.send('You can check the artist registered in this server here: ' + guild.idPaste);
-            }
-        })
+        pastebin.edit(guild.idPaste, options)
     }
 }
 

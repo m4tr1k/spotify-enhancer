@@ -4,7 +4,6 @@ const pastebin = require('./api/pastebin-properties');
 const spotify = require('./api/spotify-properties').client;
 const auth = require('./auth.json');
 
-const newReleases = require('./src/releases');
 const checkReleases = require('./src/checkReleases');
 const server = require('./src/server');
 const search = require('./src/search/search');
@@ -66,33 +65,44 @@ function refreshToken(){
 
 discordClient.on('message', msg => {
     if(msg.content.startsWith(prefix)) {
-      checkReleases.verifyNewReleasesCommandsChannel(msg.channel.id).then(cursor => {
-        cursor.hasNext().then( result => {
-          if(result){
-            switch(msg.content.substring(3, 4)){
-              case '+': 
-                var possibleArtists = msg.content.replace(prefix + '+', "").split(',').map(item => item.trim());
+      const content = msg.content.replace(prefix, '').trim();
+      const option = content.split(' ')[0].toLowerCase();
+      switch(option){
+        case 'artists':
+          checkReleases.seeArtistsGuild(msg)
+          break;
+        case '+':
+          checkReleases.verifyNewReleasesCommandsChannel(msg.channel.id).then(cursor => {
+            cursor.hasNext().then( result => {
+              if(result){
+                var possibleArtists = content.replace('+', "").split(',').map(item => item.trim());
                 search.searchArtists(possibleArtists, msg).then( artists => {
                   msg.delete();
-                  checkReleases.addArtistsToGuild(artists, cursor);
+                  checkReleases.addArtistsToGuild(artists, cursor, msg);
                 })
-                break;
-              case '-':
-                var possibleArtists = msg.content.replace(prefix + '-', "").split(',').map(item => item.trim());
+              } else {
+                msg.reply("This is not the channel to add or remove artists...")
+              }
+            })
+          })
+          break;
+        case '-':
+          checkReleases.verifyNewReleasesCommandsChannel(msg.channel.id).then(cursor => {
+            cursor.hasNext().then( result => {
+              if(result){
+                var possibleArtists = content.replace('-', "").split(',').map(item => item.trim());
                 msg.delete();
                 checkReleases.removeArtistsGuild(possibleArtists, cursor);
-                break;
-              default:
-                if(msg.content.split(' ')[1].toLowerCase() === 'artists'){
-                  checkReleases.seeArtistsGuild(cursor)
-                } else {
-                  msg.reply("I don't know what you want to do...");
-                }
-                break;
-            }
-          }
-        })
-      })
+              } else {
+                msg.reply("This is not the channel to add or remove artists...")
+              }
+            })
+          })
+          break;
+        default:
+          msg.reply("I don't know what you want to do...")
+          break;
+      }
     }   
 });
 

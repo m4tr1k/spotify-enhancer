@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const client = mongoose.connection;
+const pastebin = require('./pastebin-properties');
 
 async function newConnection(){
     await mongoose.connect('mongodb://localhost:27017/spotify-enhancer', {useNewUrlParser: true, useUnifiedTopology: true});
@@ -13,7 +14,7 @@ async function checkConnection(){
 
 async function findChannel(idChannel){
     await checkConnection();
-    const cursor = await client.db.collection('guild').find({
+    const cursor = client.db.collection('guild').find({
         idReleasesCommandsChannel: idChannel
     });
     return cursor
@@ -52,20 +53,21 @@ async function removeGuildDB(idServer){
     }
 }
 
-async function insertArtistsDB(artists, idServer){
+async function insertArtistsDB(artists, guild, msgDiscord){
+    let newArtists = false;
     for(var i = 0; i < artists.length; i++){
         const number = await client.collection('guild').find({
-            _id: idServer,
+            _id: guild._id,
             artists: {
                 idArtist: artists[i].artistId,
                 nameArtist: artists[i].artistName,
                 nameArtist_lowerCase: artists[i].artistName.toLowerCase()
             }
         }).count();
-        console.log(number);
         if(number === 0){
+            newArtists = true;
             await client.collection('guild').updateOne(
-                {_id: idServer},
+                {_id: guild._id},
                 {
                     $push: { artists: 
                         { 
@@ -76,14 +78,22 @@ async function insertArtistsDB(artists, idServer){
                     } 
                 }
             )
-        }            
+        } else {
+            msgDiscord.channel.send('**' + artists[i].artistName + '** is already registed in the database!');
+        }           
+    }
+
+    if(newArtists){
+        const artists = await getArtistsGuild(guild._id);
+        const message = artists.join('\n');
+        Promise.all([pastebin.editPaste(message, guild), msgDiscord.channel.send('Artists registered in the server successfully!')])
     }
 }
 
-async function removeArtistsDB(artistNames, idServer){
+async function removeArtistsDB(artistNames, guild){
     for(var i = 0; i < artistNames.length; i++){
         await client.collection('guild').updateOne(
-            {_id: idServer},
+            {_id: guild._id},
             {
                 $pull: { artists: 
                     {
@@ -93,6 +103,28 @@ async function removeArtistsDB(artistNames, idServer){
             }
         )
     }
+    const artists = await getArtistsGuild(guild._id);
+    const message = artists.join('\n');
+    pastebin.editPaste(message, guild);
+}
+
+async function getArtistsGuild(idServer){
+    await checkConnection();
+    const cursor = client.db.collection('guild').find({
+        _id: idServer
+    })
+    const guild = await cursor.next();
+    const artists = guild.artists.map(artist => artist.nameArtist).sort();
+    return artists;
+}
+
+async function getPaste(idServer){
+    await checkConnection();
+    const cursor = await client.db.collection('guild').find({
+        _id: idServer
+    }, {projection: {idPaste: 1, _id: 0}}).toArray();
+    const idPaste = cursor.map(obj => obj.idPaste)
+    return idPaste[0];
 }
 
 async function getAllGuilds(){
@@ -108,3 +140,4 @@ exports.findChannel = findChannel
 exports.client = client
 exports.getAllGuilds = getAllGuilds
 exports.removeArtistsDB = removeArtistsDB
+exports.getPaste = getPaste
