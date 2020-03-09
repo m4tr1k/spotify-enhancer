@@ -24,12 +24,14 @@ async function searchArtists(artists, msgDiscord){
             artistsIDs.push(info);
         } else {
             const artist = await searchArtistByName(artists[i], msgDiscord);
-            if(artist !== null){
+            if(artist === null){
+                return null;
+            } else if(artist !== ''){
                 artistsIDs.push(artist);
             }
         } 
     }
-    return new Promise ( returnArtistArray => returnArtistArray(artistsIDs));
+    return artistsIDs;
 }
 
  async function searchArtistByName(artistName, msgDiscord){
@@ -38,14 +40,14 @@ async function searchArtists(artists, msgDiscord){
     const possibleArtists = search.body.artists.items;
     
     if(possibleArtists.length !== 0){
-        const msgReply = await msgDiscord.reply('Which "_' + artistName + '_" are you looking for? (React with ✅ on the desired artist)');
+        const msgReply = await msgDiscord.reply('Which "_' + artistName + '_" are you looking for? (React with ✅ on the desired artist, ⛔ to cancel the search)');
         const artistDetails = await buildMessage(possibleArtists, 0);
     
         const result = await Promise.all([sendMessage(artistDetails, msgDiscord), await chooseArtist(possibleArtists, 0, msgDiscord)])
     
         const artistID = result.map(value => value)[1];
         msgReply.delete();
-        if(artistID === null){
+        if(artistID === ''){
             msgDiscord.reply('It seems that this *' + artistName + '* does not exist...');
         }
         return artistID;
@@ -85,6 +87,7 @@ async function sendMessage(artistDetails, msgDiscord){
     info.messageId = msgReaction.id;
     await msgReaction.react('✅');
     await msgReaction.react('❎');
+    await msgReaction.react('⛔');
 }
 
 async function chooseArtist(possibleArtists, number, msgDiscord){
@@ -106,8 +109,12 @@ async function chooseArtist(possibleArtists, number, msgDiscord){
                         })
                     })
                 } else {
-                    reaction.message.delete().then(returnArtistID(null));
+                    reaction.message.delete();
+                    returnArtistID('');
                 }
+            } else if(reaction.emoji.name === '⛔' && info.messageId === reaction.message.id && !user.bot){
+                reaction.message.delete();
+                returnArtistID(null);
             }
         }
     

@@ -77,8 +77,9 @@ discordClient.on('message', msg => {
               if(result){
                 var possibleArtists = content.replace('+', "").split(',').map(item => item.trim());
                 search.searchArtists(possibleArtists, msg).then( artists => {
-                  msg.delete();
-                  checkReleases.addArtistsToGuild(artists, cursor, msg);
+                  if(artists !== null){
+                    checkReleases.addArtistsToGuild(artists, cursor, msg);
+                  }
                 })
               } else {
                 msg.reply("This is not the channel to add or remove artists...")
@@ -91,7 +92,6 @@ discordClient.on('message', msg => {
             cursor.hasNext().then( result => {
               if(result){
                 var possibleArtists = content.replace('-', "").split(',').map(item => item.trim());
-                msg.delete();
                 checkReleases.removeArtistsGuild(possibleArtists, cursor);
               } else {
                 msg.reply("This is not the channel to add or remove artists...")
