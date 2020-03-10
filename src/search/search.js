@@ -24,9 +24,7 @@ async function searchArtists(artists, msgDiscord){
             artistsIDs.push(info);
         } else {
             const artist = await searchArtistByName(artists[i], msgDiscord);
-            if(artist === null){
-                return null;
-            } else if(artist !== ''){
+            if(artist !== '' && artist !== null){
                 artistsIDs.push(artist);
             }
         } 
