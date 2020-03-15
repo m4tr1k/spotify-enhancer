@@ -32,7 +32,7 @@ async function sendNewReleases(){
         releases.checkNewReleases(guild).then( albums => {
             if(albums.length > 0){
                 releases.createEmbeds(albums).then(messages => {
-                    const channel = discordClient.channels.find(channel => channel.id === guild.idReleasesChannel);
+                    const channel = discordClient.channels.cache.find(channel => channel.id === guild.idReleasesChannel);
                     releases.sendNewReleases(messages, channel);
                 });
             }
