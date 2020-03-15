@@ -44,7 +44,7 @@ async function createEmbeds(albums){
 }
 
 function createEmbed(title, description, urlImage){
-    return new Discord.RichEmbed()
+    return new Discord.MessageEmbed()
         .setColor('#1DB954')
         .setTitle(title)
         .setDescription(description)
