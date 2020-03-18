@@ -92,7 +92,7 @@ discordClient.on('message', msg => {
             cursor.hasNext().then( result => {
               if(result){
                 var possibleArtists = content.replace('-', "").split(',').map(item => item.trim());
-                checkReleases.removeArtistsGuild(possibleArtists, cursor);
+                checkReleases.removeArtistsGuild(possibleArtists, cursor, msg);
               } else {
                 msg.reply("This is not the channel to add or remove artists...")
               }

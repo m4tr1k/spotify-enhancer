@@ -90,9 +90,10 @@ async function insertArtistsDB(artists, guild, msgDiscord){
     }
 }
 
-async function removeArtistsDB(artistNames, guild){
+async function removeArtistsDB(artistNames, guild, msgDiscord){
+    let removedArtists = false;
     for(var i = 0; i < artistNames.length; i++){
-        await client.collection('guild').updateOne(
+        const update = await client.collection('guild').updateOne(
             {_id: guild._id},
             {
                 $pull: { artists: 
@@ -102,10 +103,18 @@ async function removeArtistsDB(artistNames, guild){
                 }
             }
         )
+        if(update.result.nModified == 0){
+            msgDiscord.channel.send('This artist does not exist in the database or something went wrong!');
+        } else {
+            removedArtists = true;
+        }
     }
-    const artists = await getArtistsGuild(guild._id);
-    const message = artists.join('\n');
-    pastebin.editPaste(message, guild);
+
+    if(removedArtists){
+        const artists = await getArtistsGuild(guild._id);
+        const message = artists.join('\n');
+        Promise.all([pastebin.editPaste(message, guild), msgDiscord.channel.send('Artists successfully deleted!')])
+    }
 }
 
 async function getArtistsGuild(idServer){

@@ -12,9 +12,9 @@ async function addArtistsToGuild(artists, cursor, msgDiscord){
     await db.insertArtistsDB(artists, guild, msgDiscord);
 }
 
-async function removeArtistsGuild(artists, cursor){
+async function removeArtistsGuild(artists, cursor, msgDiscord){
     const guild = await cursor.next();
-    await db.removeArtistsDB(artists, guild);
+    await db.removeArtistsDB(artists, guild, msgDiscord);
 }
 
 async function seeArtistsGuild(msgDiscord){
