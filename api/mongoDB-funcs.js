@@ -123,7 +123,9 @@ async function getArtistsGuild(idServer){
         _id: idServer
     })
     const guild = await cursor.next();
-    const artists = guild.artists.map(artist => artist.nameArtist).sort();
+    const artists = guild.artists.map(artist => artist.nameArtist).sort((artist1, artist2) => {
+        return artist1.toLowerCase().localeCompare(artist2.toLowerCase())
+    });
     return artists;
 }
 
