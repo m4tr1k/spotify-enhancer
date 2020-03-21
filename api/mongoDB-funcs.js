@@ -27,7 +27,7 @@ async function findGuild(idServer){
     return number;
 }
 
-async function insertGuildDB(idServer, idReleasesChannel){
+async function insertGuildDB(idServer, idReleasesChannel, idReleasesCommandsChannel){
     await checkConnection();
     
     const number = await findGuild(idServer);
@@ -36,7 +36,7 @@ async function insertGuildDB(idServer, idReleasesChannel){
         await client.db.collection('guild').insertOne({
             _id: idServer, 
             idReleasesChannel: idReleasesChannel,
-            artists: []
+            idReleasesCommandsChannel: idReleasesCommandsChannel
         })
     }
 }
