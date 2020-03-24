@@ -56,36 +56,39 @@ async function removeGuildDB(idServer){
 async function insertArtistsDB(artists, guild, msgDiscord){
     let newArtists = false;
     for(var i = 0; i < artists.length; i++){
-        const number = await client.collection('guild').find({
-            _id: guild._id,
-            artists: {
-                idArtist: artists[i].artistId,
-                nameArtist: artists[i].artistName,
-                nameArtist_lowerCase: artists[i].artistName.toLowerCase()
+        const cursor = client.collection('artist').find({
+            _id: artists[i].artistId
+        })
+        const isArtistDB = await cursor.hasNext();
+        if(isArtistDB){
+            const artist = await cursor.next();
+            if(artist.idGuilds.includes(guild._id)){
+                msgDiscord.channel.send('**' + artists[i].artistName + '** is already registed in the database!'); 
+            } else {
+                await client.collection('artist').updateOne(
+                    {_id: artists[i].artistId},
+                    {
+                        $push: { idGuilds: guild._id}
+                    }
+                )
+                newArtists = true;
             }
-        }).count();
-        if(number === 0){
-            newArtists = true;
-            await client.collection('guild').updateOne(
-                {_id: guild._id},
-                {
-                    $push: { artists: 
-                        { 
-                            idArtist: artists[i].artistId,
-                            nameArtist: artists[i].artistName,
-                            nameArtist_lowerCase: artists[i].artistName.toLowerCase()
-                        } 
-                    } 
-                }
-            )
         } else {
-            msgDiscord.channel.send('**' + artists[i].artistName + '** is already registed in the database!');
+            await client.collection('artist').insertOne({
+                _id: artists[i].artistId,
+                nameArtist: artists[i].artistName,
+                nameArtist_lowerCase: artists[i].artistName.toLowerCase(),
+                idLatestReleases: [],
+                idGuilds: [
+                    guild._id
+                ]
+            })
+            newArtists = true;
         }           
     }
 
     if(newArtists){
-        const artists = await getArtistsGuild(guild._id);
-        const message = artists.join('\n');
+        const message = await getArtistsGuild(guild._id);
         Promise.all([pastebin.editPaste(message, guild), msgDiscord.channel.send('Artists registered in the server successfully!')])
     }
 }
@@ -93,39 +96,41 @@ async function insertArtistsDB(artists, guild, msgDiscord){
 async function removeArtistsDB(artistNames, guild, msgDiscord){
     let removedArtists = false;
     for(var i = 0; i < artistNames.length; i++){
-        const update = await client.collection('guild').updateOne(
-            {_id: guild._id},
+        const newDocument = await client.collection('artist').updateOne(
+            {nameArtist_lowerCase: artistNames[i].toLowerCase()},
             {
-                $pull: { artists: 
-                    {
-                        nameArtist_lowerCase: artistNames[i].toLowerCase()
-                    }
-                }
+                $pull: { idGuilds: guild._id }
             }
         )
-        if(update.result.nModified == 0){
-            msgDiscord.channel.send('This artist does not exist in the database or something went wrong!');
+
+        if(newDocument.result.nModified === 0){
+            msgDiscord.channel.send('This artist does not exist in the database!');
         } else {
             removedArtists = true;
         }
     }
 
     if(removedArtists){
-        const artists = await getArtistsGuild(guild._id);
-        const message = artists.join('\n');
+        const message = await getArtistsGuild(guild._id);
         Promise.all([pastebin.editPaste(message, guild), msgDiscord.channel.send('Artists successfully deleted!')])
     }
 }
 
 async function getArtistsGuild(idServer){
     await checkConnection();
-    const cursor = client.db.collection('guild').find({
-        _id: idServer
-    })
-    const guild = await cursor.next();
-    const artists = guild.artists.map(artist => artist.nameArtist).sort((artist1, artist2) => {
-        return artist1.toLowerCase().localeCompare(artist2.toLowerCase())
-    });
+
+    let artists = '';
+    const cursor = client.db.collection('artist').find({
+        idGuilds: idServer
+    }).sort({nameArtist: 1});
+
+    let hasNextArtist = await cursor.hasNext();
+    while(hasNextArtist){
+        const artist = await cursor.next();
+        artists += artist.nameArtist + '\n';
+        hasNextArtist = await cursor.hasNext();
+    }
+
     return artists;
 }
 
@@ -135,13 +140,7 @@ async function getPaste(idServer){
         _id: idServer
     }, {projection: {idPaste: 1, _id: 0}}).toArray();
     const idPaste = cursor.map(obj => obj.idPaste)
-    return idPaste[0];
-}
-
-async function getAllGuilds(){
-    await checkConnection();
-    const cursor = client.collection('guild').find();
-    return cursor;
+    return idPaste[0]; 
 }
 
 exports.insertGuildDB = insertGuildDB
@@ -149,6 +148,5 @@ exports.removeGuildDB = removeGuildDB
 exports.insertArtistsDB = insertArtistsDB
 exports.findChannel = findChannel
 exports.client = client
-exports.getAllGuilds = getAllGuilds
 exports.removeArtistsDB = removeArtistsDB
 exports.getPaste = getPaste
