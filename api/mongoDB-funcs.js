@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const client = mongoose.connection;
 const pastebin = require('./pastebin-properties');
+const releases = require('../src/releases');
 
 async function newConnection(){
     await mongoose.connect('mongodb://localhost:27017/spotify-enhancer', {useNewUrlParser: true, useUnifiedTopology: true});
@@ -74,11 +75,13 @@ async function insertArtistsDB(artists, guild, msgDiscord){
                 newArtists = true;
             }
         } else {
+            const latestReleases = await releases.getLatestReleases(artists[i].artistId);
+            console.log(latestReleases);
             await client.collection('artist').insertOne({
                 _id: artists[i].artistId,
                 nameArtist: artists[i].artistName,
                 nameArtist_lowerCase: artists[i].artistName.toLowerCase(),
-                idLatestReleases: [],
+                idLatestReleases: latestReleases,
                 idGuilds: [
                     guild._id
                 ]
