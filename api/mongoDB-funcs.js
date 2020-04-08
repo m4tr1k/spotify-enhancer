@@ -66,22 +66,42 @@ async function insertArtistsDB(artists, guild, msgDiscord){
             if(artist.idGuilds.includes(guild._id)){
                 msgDiscord.channel.send('**' + artists[i].artistName + '** is already registed in the database!'); 
             } else {
-                await client.collection('artist').updateOne(
+                const document = await client.collection('artist').findOneAndUpdate(
                     {_id: artists[i].artistId},
                     {
                         $push: { idGuilds: guild._id}
                     }
                 )
+                
+                const currentDate = new Date();
+                const releaseDate = new Date(document.value.latestReleases[0].releaseDate);
+                currentDate.setHours(0,0,0,0);
+
+                if(releaseDate >= currentDate){
+                    const idGuild = [];
+                    idGuild.push(guild._id);
+                    releases.createEmbeds(document.value.latestReleases, idGuild);
+                }
+
                 newArtists = true;
             }
         } else {
             const latestReleases = await releases.getLatestReleases(artists[i].artistId);
-            console.log(latestReleases);
+            const currentDate = new Date();
+            const releaseDate = new Date(latestReleases[0].releaseDate);
+            currentDate.setHours(0,0,0,0);
+
+            if(releaseDate >= currentDate){
+                const idGuild = [];
+                idGuild.push(guild._id);
+                releases.createEmbeds(latestReleases, idGuild);
+            }
+
             await client.collection('artist').insertOne({
                 _id: artists[i].artistId,
                 nameArtist: artists[i].artistName,
                 nameArtist_lowerCase: artists[i].artistName.toLowerCase(),
-                idLatestReleases: latestReleases,
+                latestReleases: latestReleases,
                 idGuilds: [
                     guild._id
                 ]
@@ -146,6 +166,14 @@ async function getPaste(idServer){
     return idPaste[0]; 
 }
 
+async function getAllArtists(){
+    await checkConnection();
+    const cursor = await client.db.collection('artist').find({
+        idGuilds: { $exists: true, $ne: [] }
+    })
+    return cursor;
+}
+
 exports.insertGuildDB = insertGuildDB
 exports.removeGuildDB = removeGuildDB
 exports.insertArtistsDB = insertArtistsDB
@@ -153,3 +181,4 @@ exports.findChannel = findChannel
 exports.client = client
 exports.removeArtistsDB = removeArtistsDB
 exports.getPaste = getPaste
+exports.getAllArtists = getAllArtists
