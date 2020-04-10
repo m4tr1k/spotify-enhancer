@@ -34,12 +34,17 @@ discordClient.on('ready', () => {
           console.log('Something went wrong!', err);
       }).then( () => {
         var localTime = new Date();
-        var timeUntilCheck = new Date(localTime.getFullYear(), localTime.getMonth(), localTime.getDate(), 11, 29, 0, 0) - localTime;
-        if(timeUntilCheck > 0){
-          console.log(timeUntilCheck);
-          setTimeout(() => {sendNewReleases(), setInterval(() => sendNewReleases(), 86400000)}, timeUntilCheck);
+        if(localTime.getMinutes() === 0){
+          sendNewReleases();
+          setInterval(() => sendNewReleases(), 3600000);
         } else {
-          setInterval(() => sendNewReleases(), 86400000)
+          localTime.setHours(localTime.getHours() + 1);
+          localTime.setMinutes(0);
+          localTime.setSeconds(0);
+          localTime.setMilliseconds(0);
+          const timeUntilCheck = localTime - new Date();
+          console.log(timeUntilCheck);
+          setTimeout(() => {sendNewReleases(), setInterval(() => sendNewReleases(), 3600000)}, timeUntilCheck);
         }
         setInterval(refreshToken, 3600000);
       })

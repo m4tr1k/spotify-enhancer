@@ -1,46 +1,46 @@
 const axios = require('axios');
 const Discord = require('discord.js');
+const discordClient = require('../api/discord-properties').discordClient;
 const spotify = require('../api/spotify-properties').client;
+const db = require('../api/mongoDB-funcs');
 
-async function createEmbeds(albums){
-    var messages = [];
+var Album = function(props){
+    this.nameAlbum = props.nameAlbum;
+    this.artists = props.artists;
+    this.featArtists = props.featArtists;
+    this.label = props.label
+    this.releaseDate = props.releaseDate;
+    this.tracklist = props.tracklist;
+    this.coverArt = props.coverArt;
+    this.spotifyLink = props.spotifyLink;
+}
+
+function createEmbeds(albums, idGuildChannels){
     for(var i = 0; i < albums.length; i++){
-        const album = albums[i];
-        const fullAlbumDetails = await getFullAlbumDetails(album.href);
-        const artists = getAuthors(album);
-        const nameAlbum = album.name;
-        const label = 'Label: ' + fullAlbumDetails.label;
-        const splitDate = album.release_date.split('-');
-        const releaseDate = 'Release Date: ' + splitDate[2] + '-' + splitDate[1] + '-' + splitDate[0];
-        
-        let description;
-        let title;
-        if(fullAlbumDetails.total_tracks > 1){
-            title = artists + '\n' + nameAlbum;
-            const tracklist = getTracklist(fullAlbumDetails, artists, title);
-            const link = album.external_urls.spotify;
-            description = label + '\n' + releaseDate + '\n\nTracklist:\n' + tracklist + '\n[🎧 Spotify Link](' + link + ')'; 
-        } else {
-            const featuredArtists = getFeaturedArtists(fullAlbumDetails, artists)
-            if(featuredArtists !== undefined){
-                title = artists + ' ' + featuredArtists + '\n' + nameAlbum;
-            } else {
-                title = artists + '\n' + nameAlbum;
-            }
-            const link = fullAlbumDetails.tracks.items[0].external_urls.spotify;
-            
-            description = label + '\n' + releaseDate + '\n\n[🎧 Spotify Link](' + link + ')';
-        }
+        createEmbedAlbum(albums[i], idGuildChannels);
+    }
+}
 
-        //Creates embed based on info gathered
-        const msg = createEmbed(title, description, fullAlbumDetails.images[0].url);
-        
-        if(!messages.includes(msg)){
-            messages.push(msg);
-        }
+function createEmbedAlbum(album, idGuildChannels){
+    const title = album.artists + ' ' + album.featArtists + '\n' + album.nameAlbum;
+
+    const splitDate = album.releaseDate.split('-');
+    const releaseDate = splitDate[2] + '-' + splitDate[1] + '-' + splitDate[0];
+
+    let description = 'Label: ' + album.label + '\n' + 'Release Date: ' + releaseDate;
+    
+    if(album.tracklist !== ''){
+        description += '\n\nTracklist:\n' + album.tracklist + '\n[🎧 Spotify Link](' + album.spotifyLink + ')'; 
     }
 
-    return messages;
+    description += '\n\n[🎧 Spotify Link](' + album.spotifyLink + ')';
+
+    const msg = createEmbed(title, description, album.coverArt);
+
+    idGuildChannels.forEach(idGuildChannel => {
+        const channel = discordClient.channels.cache.find(channel => channel.id === idGuildChannel);
+        sendMessages(msg, channel);
+    })
 }
 
 function createEmbed(title, description, urlImage){
@@ -80,9 +80,9 @@ function getFeaturedArtists(fullAlbumDetails, artists){
         }
     }).map(artist => artist.name);
 
-    let featuredArtists;
+    let featuredArtists = '';
     if(trackArtists.length > 0){
-        featuredArtists = ' (ft. ';
+        featuredArtists = '(ft. ';
         for(var i = 0; i < trackArtists.length - 1; i++){
             featuredArtists += trackArtists[i] + ' & ';
         }
@@ -118,48 +118,137 @@ function getTracklist(fullAlbumDetails, titleArtists, title){
     return tracklist;
 }
 
-async function checkNewReleases(guild){
+async function checkNewReleases(artist){
     const currentDate = new Date();
-    const artistsNewReleases = [];
-    const artists = guild.artists;
-    const artistsIds = artists.map(artist => artist.idArtist);
-    for(var i = 0; i < artists.length; i++){     
-        const newestAlbum = await getLatestRelease(artistsIds, i);
-        if(newestAlbum !== ''){
-            const releaseDate = Date.parse(newestAlbum.release_date);
-            if(releaseDate > currentDate){
-                if(!artistsNewReleases.some(obj => obj.uri === newestAlbum.uri)){
-                    artistsNewReleases.push(newestAlbum);
-                }
-            }
-        }
+    currentDate.setHours(0,0,0,0);
+    const latestAlbumObjects = await getLatestAlbumObjects(artist._id);
+    const latestReleaseDate = new Date(latestAlbumObjects[0].release_date);
+
+    if(latestReleaseDate >= currentDate){
+        return await getAlbumInfos(latestAlbumObjects);
+    } else {
+        return [];
     }
-    return artistsNewReleases;
 }
 
-async function getLatestRelease(artists, number){
-    const dataAlbums = await spotify.spotifyClient.getArtistAlbums(artists[number], {offset: 0, include_groups: 'album,single'})
+async function getLatestReleases(artistId){
+    const albums = await getLatestAlbumObjects(artistId);
+    return await getAlbumInfos(albums);
+}
+
+async function getAlbumInfos(albums){
+    let latestReleases = [];
+    for(var i = 0; i < albums.length; i++){
+        const fullAlbumDetails = await getFullAlbumDetails(albums[i].href);
+        const artists = getAuthors(albums[i]);
+        const nameAlbum = albums[i].name;
+        
+        let link;
+        let tracklist;
+        let featuredArtists;
+        let album;
+
+        if(fullAlbumDetails.total_tracks > 1){
+            const title = artists + '\n' + nameAlbum;
+            tracklist = getTracklist(fullAlbumDetails, artists, title);
+            link = albums[i].external_urls.spotify;
+            album = new Album({
+                nameAlbum: nameAlbum,
+                artists: artists,
+                featArtists: '',
+                label: fullAlbumDetails.label,
+                releaseDate: albums[i].release_date,
+                tracklist: tracklist,
+                coverArt: fullAlbumDetails.images[0].url,
+                spotifyLink: link
+            })
+        } else {
+            featuredArtists = getFeaturedArtists(fullAlbumDetails, artists);
+            link = fullAlbumDetails.tracks.items[0].external_urls.spotify;
+            album = new Album({
+                nameAlbum: nameAlbum,
+                artists: artists,
+                featArtists: featuredArtists,
+                label: fullAlbumDetails.label,
+                releaseDate: albums[i].release_date,
+                tracklist: '',
+                coverArt: fullAlbumDetails.images[0].url,
+                spotifyLink: link
+            })
+        }
+
+        latestReleases.push(album);
+    }
+
+    return latestReleases;
+}
+
+async function getLatestAlbumObjects(artistId){
+    let latestReleases = [];
+    let dataAlbums;
+    try{
+        dataAlbums = await spotify.spotifyClient.getArtistAlbums(artistId, {offset: 0, include_groups: 'album,single,appears_on'})
+    } catch (err){
+        setTimeout(() => getLatestAlbumObjects(artistId), (err.headers['retry-after'] * 1000))
+        return [];
+    }
+
     if(dataAlbums.body.items.length !== 0){
         dataAlbums.body.items.sort((a, b) => a.release_date.localeCompare(b.release_date));
         dataAlbums.body.items.reverse();
 
-        return dataAlbums.body.items[0];
+        let count = 0;
+
+        while(dataAlbums.body.items[count].album_type === 'compilation'){
+            count++;
+        }
+
+        latestReleases.push(dataAlbums.body.items[count]);
+
+        let existsMoreLatestReleases = true;
+        let countAux = count + 1;
+        
+        while(existsMoreLatestReleases && countAux < 20){
+            if(dataAlbums.body.items[countAux].release_date === dataAlbums.body.items[count].release_date){
+                latestReleases.push(dataAlbums.body.items[countAux]);
+                countAux++;
+            } else {
+                existsMoreLatestReleases = false;
+            }
+        }
     } else {
-        return '';
+        return [];
     }
+
+    return latestReleases;
 }
 
-function sendNewReleases(messages, channel){
-    for(var i = 0; i < messages.length; i++){
-        channel.send(messages[i]).then( lstMsg => {
-            lstMsg.react('👍')
-            .then(() => lstMsg.react('👎'))
-            .then(() => lstMsg.react('❤️'));
-        }); 
+async function sendNewReleases(album, idGuildChannelArray){
+    const artists = album.artists.split('&');
+    for(var i = 0; i < artists.length; i++){
+        let idGuildChannels = await db.getIdGuildsArtist(artists[i].trim());
+        if(idGuildChannels.length !== 0){
+            for(var j = 0; j < idGuildChannels.length; j++){
+                if(idGuildChannelArray.includes(idGuildChannels[j])){
+                    idGuildChannelArray.push(idGuildChannels[j]);
+                }
+            }
+            
+        }
     }
+    createEmbedAlbum(album, idGuildChannelArray);
+}
+
+function sendMessages(msg, channel){
+    channel.send(msg).then( lstMsg => {
+        lstMsg.react('👍')
+        .then(() => lstMsg.react('👎'))
+        .then(() => lstMsg.react('❤️'));
+    });
 }
 
 exports.checkNewReleases = checkNewReleases;
 exports.sendNewReleases = sendNewReleases;
-exports.getLatestRelease = getLatestRelease;
+exports.getLatestReleases = getLatestReleases;
 exports.createEmbeds = createEmbeds;
+exports.createEmbedAlbum = createEmbedAlbum;

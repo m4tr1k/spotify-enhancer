@@ -1,6 +1,5 @@
 const db = require('../api/mongoDB-funcs');
 const releases = require('./releases');
-const discordClient = require('../api/discord-properties').discordClient;
 
 async function verifyNewReleasesCommandsChannel(idChannel){
     const isNewReleasesCommandsChannel = await db.findChannel(idChannel);
@@ -22,21 +21,24 @@ async function seeArtistsGuild(msgDiscord){
     if(idPaste === undefined){
         msgDiscord.channel.send('there are no artists registered at the moment...');
     } else {
-        msgDiscord.channel.send('You can check the artist registered in this server here: ' + idPaste);
+        msgDiscord.channel.send('You can check the artists registered in this server here: ' + idPaste);
     }
 }
 
 async function sendNewReleases(){
-    const cursor = await db.getAllGuilds();
-    cursor.forEach(guild => {
-        releases.checkNewReleases(guild).then( albums => {
-            if(albums.length > 0){
-                releases.createEmbeds(albums).then(messages => {
-                    const channel = discordClient.channels.cache.find(channel => channel.id === guild.idReleasesChannel);
-                    releases.sendNewReleases(messages, channel);
-                });
+    let newReleases = [];
+    const cursor = await db.getAllArtists();
+    cursor.forEach(artist => {
+        releases.checkNewReleases(artist).then(albums => {
+            for(var i = 0; i < albums.length; i++){
+                if(!newReleases.includes(albums[i].spotifyLink) && !artist.latestReleases.some(release => {
+                    return release.spotifyLink === albums[i].spotifyLink;
+                })){
+                    newReleases.push(albums[i].spotifyLink);
+                    releases.sendNewReleases(albums[i], artist.idGuildChannels);
+                }
             }
-        });
+        })
     })
 }
 

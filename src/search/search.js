@@ -14,20 +14,37 @@ var InfoIDs = function(props){
 async function searchArtists(artists, msgDiscord){
     let artistsIDs = [];
     for(var i = 0; i < artists.length; i++){
-        if(artists[i].startsWith("spotify:artist:")){
-            const id = artists[i].replace("spotify:artist:", "");
-            const artist = await spotify.spotifyClient.getArtist(id);
-            info = new InfoIDs({
-                artistId: id,
-                artistName: artist.body.name
-            })
-            artistsIDs.push(info);
-        } else {
-            const artist = await searchArtistByName(artists[i], msgDiscord);
-            if(artist !== '' && artist !== null){
-                artistsIDs.push(artist);
-            }
-        } 
+        if(artists[i] !== ''){
+            if(artists[i].startsWith("spotify:artist:") || artists[i].startsWith("https://open.spotify.com/artist/")){
+                const prefixURI = artists[i].startsWith("spotify:artist:");
+                let id;
+    
+                switch(prefixURI){
+                    case true:
+                        id = artists[i].replace("spotify:artist:", "");
+                        break;
+                    case false:
+                        if(artists[i].indexOf('?') !== -1){
+                            id = artists[i].substring(artists[i].lastIndexOf('/') + 1, artists[i].lastIndexOf('?'));
+                        } else {
+                            id = artists[i].substring(artists[i].lastIndexOf('/') + 1);
+                        }
+                        break;
+                }
+    
+                const artist = await spotify.spotifyClient.getArtist(id);
+                info = new InfoIDs({
+                    artistId: id,
+                    artistName: artist.body.name
+                })
+                artistsIDs.push(info);
+            } else {
+                const artist = await searchArtistByName(artists[i], msgDiscord);
+                if(artist !== '' && artist !== null){
+                    artistsIDs.push(artist);
+                }
+            } 
+        }
     }
     return artistsIDs;
 }
