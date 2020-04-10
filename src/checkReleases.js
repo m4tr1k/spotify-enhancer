@@ -21,7 +21,7 @@ async function seeArtistsGuild(msgDiscord){
     if(idPaste === undefined){
         msgDiscord.channel.send('there are no artists registered at the moment...');
     } else {
-        msgDiscord.channel.send('You can check the artist registered in this server here: ' + idPaste);
+        msgDiscord.channel.send('You can check the artists registered in this server here: ' + idPaste);
     }
 }
 

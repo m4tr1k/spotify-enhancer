@@ -56,6 +56,7 @@ async function removeGuildDB(idServer){
 
 async function insertArtistsDB(artists, guild, msgDiscord){
     let newArtists = false;
+    let artistsAddedDB = '**';
     for(var i = 0; i < artists.length; i++){
         const cursor = client.collection('artist').find({
             _id: artists[i].artistId
@@ -82,7 +83,11 @@ async function insertArtistsDB(artists, guild, msgDiscord){
                     idGuildChannel.push(guild.idReleasesChannel);
                     releases.createEmbeds(document.value.latestReleases, idGuildChannel);
                 }
-
+                if(artistsAddedDB === '**'){
+                    artistsAddedDB += artists[i].artistName;
+                } else {
+                    artistsAddedDB += ', ' + artists[i].artistName;
+                }
                 newArtists = true;
             }
         } else {
@@ -106,13 +111,19 @@ async function insertArtistsDB(artists, guild, msgDiscord){
                     guild.idReleasesChannel
                 ]
             })
+            if(artistsAddedDB === '**'){
+                artistsAddedDB += artists[i].artistName;
+            } else {
+                artistsAddedDB += ', ' + artists[i].artistName;
+            }
             newArtists = true;
         }           
     }
 
     if(newArtists){
+        artistsAddedDB += '**';
         const message = await getArtistsGuild(guild.idReleasesChannel);
-        Promise.all([pastebin.editPaste(message, guild), msgDiscord.channel.send('Artists registered in the server successfully!')])
+        Promise.all([pastebin.editPaste(message, guild), msgDiscord.channel.send(artistsAddedDB + ' registered in the server successfully!')])
     }
 }
 
@@ -127,7 +138,7 @@ async function removeArtistsDB(artistNames, guild, msgDiscord){
         )
 
         if(newDocument.result.nModified === 0){
-            msgDiscord.channel.send('This artist does not exist in the database!');
+            msgDiscord.channel.send('**' + artistNames[i] + '** does not exist in the database!');
         } else {
             removedArtists = true;
         }
