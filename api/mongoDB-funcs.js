@@ -92,31 +92,33 @@ async function insertArtistsDB(artists, guild, msgDiscord){
             }
         } else {
             const latestReleases = await releases.getLatestReleases(artists[i].artistId);
-            const currentDate = new Date();
-            const releaseDate = new Date(latestReleases[0].releaseDate);
-            currentDate.setHours(0,0,0,0);
-
-            if(releaseDate >= currentDate){
-                const idGuildChannel = [];
-                idGuildChannel.push(guild.idReleasesChannel);
-                releases.createEmbeds(latestReleases, idGuildChannel);
+            if(latestReleases !== ''){
+                const currentDate = new Date();
+                const releaseDate = new Date(latestReleases[0].releaseDate);
+                currentDate.setHours(0,0,0,0);
+    
+                if(releaseDate >= currentDate){
+                    const idGuildChannel = [];
+                    idGuildChannel.push(guild.idReleasesChannel);
+                    releases.createEmbeds(latestReleases, idGuildChannel);
+                }
+    
+                await client.collection('artist').insertOne({
+                    _id: artists[i].artistId,
+                    nameArtist: artists[i].artistName,
+                    nameArtist_lowerCase: artists[i].artistName.toLowerCase(),
+                    latestReleases: latestReleases,
+                    idGuildChannels: [
+                        guild.idReleasesChannel
+                    ]
+                })
+                if(artistsAddedDB === '**'){
+                    artistsAddedDB += artists[i].artistName;
+                } else {
+                    artistsAddedDB += ', ' + artists[i].artistName;
+                }
+                newArtists = true;
             }
-
-            await client.collection('artist').insertOne({
-                _id: artists[i].artistId,
-                nameArtist: artists[i].artistName,
-                nameArtist_lowerCase: artists[i].artistName.toLowerCase(),
-                latestReleases: latestReleases,
-                idGuildChannels: [
-                    guild.idReleasesChannel
-                ]
-            })
-            if(artistsAddedDB === '**'){
-                artistsAddedDB += artists[i].artistName;
-            } else {
-                artistsAddedDB += ', ' + artists[i].artistName;
-            }
-            newArtists = true;
         }           
     }
 
