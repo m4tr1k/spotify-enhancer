@@ -194,6 +194,44 @@ async function getIdGuildsArtist(artistName){
     return idGuildChannels;
 }
 
+async function updateNewReleases(album){
+    const artists = album.artists.split('&');
+    for(var i = 0; i < artists.length; i++){
+        updateReleases(artists[i].trim(), album);
+    }
+}
+
+async function updateReleases(artistName, album){
+    const document = await client.db.collection('artist').findOneAndUpdate({
+        nameArtist: artistName
+    }, {
+        $push : {
+            latestReleases: album
+        }
+    });
+
+    const currentDate = new Date();
+    currentDate.setHours(0,0,0,0);
+
+    let arrayOldReleases = []
+
+    if(document.value !== null){
+        for(release of document.value.latestReleases){
+            const releaseDate = new Date(release.releaseDate);
+            if(releaseDate < currentDate){
+                arrayOldReleases.push(release.spotifyLink);
+            }
+        }
+    
+        if(arrayOldReleases.length !== 0){
+            client.db.collection('artist').updateOne(
+                {nameArtist: artistName}, 
+                {$pull : { latestReleases: {spotifyLink: {$in: arrayOldReleases}}}}
+            )
+        }
+    }
+}
+
 exports.insertGuildDB = insertGuildDB
 exports.removeGuildDB = removeGuildDB
 exports.insertArtistsDB = insertArtistsDB
@@ -203,3 +241,4 @@ exports.removeArtistsDB = removeArtistsDB
 exports.getPaste = getPaste
 exports.getAllArtists = getAllArtists
 exports.getIdGuildsArtist = getIdGuildsArtist
+exports.updateNewReleases = updateNewReleases

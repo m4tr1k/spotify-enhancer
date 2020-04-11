@@ -35,7 +35,7 @@ async function sendNewReleases(){
                     return release.spotifyLink === albums[i].spotifyLink;
                 })){
                     newReleases.push(albums[i].spotifyLink);
-                    releases.sendNewReleases(albums[i], artist.idGuildChannels);
+                    Promise.all([releases.sendNewReleases(albums[i], artist.idGuildChannels), db.updateNewReleases(albums[i])])
                 }
             }
         })
