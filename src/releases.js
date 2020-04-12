@@ -15,6 +15,10 @@ var Album = function(props){
     this.spotifyLink = props.spotifyLink;
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+ }
+
 function createEmbeds(albums, idGuildChannels){
     for(var i = 0; i < albums.length; i++){
         createEmbedAlbum(albums[i], idGuildChannels);
@@ -31,9 +35,9 @@ function createEmbedAlbum(album, idGuildChannels){
     
     if(album.tracklist !== ''){
         description += '\n\nTracklist:\n' + album.tracklist + '\n[🎧 Spotify Link](' + album.spotifyLink + ')'; 
+    } else {
+        description += '\n\n[🎧 Spotify Link](' + album.spotifyLink + ')';
     }
-
-    description += '\n\n[🎧 Spotify Link](' + album.spotifyLink + ')';
 
     const msg = createEmbed(title, description, album.coverArt);
 
@@ -56,8 +60,8 @@ async function getFullAlbumDetails(href){
     try {
         result = await axios.get(href, spotify.getAuthOptions());
     } catch (err){
-        setTimeout(() => getFullAlbumDetails(href), (err.response.headers['retry-after'] * 1000))
-        return '';
+        await sleep(err.response.headers['retry-after'] * 1000);
+        return;
     }
 
     const fullAlbumDetails = result.data;
@@ -128,14 +132,21 @@ function getTracklist(fullAlbumDetails, titleArtists, title){
 async function checkNewReleases(artist){
     const currentDate = new Date();
     currentDate.setHours(0,0,0,0);
-    const latestAlbumObjects = await getLatestAlbumObjects(artist._id);
-    const latestReleaseDate = new Date(latestAlbumObjects[0].release_date);
+    let latestAlbumObjects = await getLatestAlbumObjects(artist._id);
+    while(latestAlbumObjects === undefined){
+        latestAlbumObjects = await getLatestAlbumObjects(artist._id);
+    }
 
-    if(latestReleaseDate >= currentDate){
-        return await getAlbumInfos(latestAlbumObjects);
+    if(latestAlbumObjects.length !== 0){
+        const latestReleaseDate = new Date(latestAlbumObjects[0].release_date);
+        if(latestReleaseDate >= currentDate){
+            return await getAlbumInfos(latestAlbumObjects);
+        } else {
+            return [];
+        }
     } else {
         return [];
-    }
+    }    
 }
 
 async function getLatestReleases(artistId){
@@ -150,49 +161,50 @@ async function getLatestReleases(artistId){
 async function getAlbumInfos(albums){
     let latestReleases = [];
     for(var i = 0; i < albums.length; i++){
-        const fullAlbumDetails = await getFullAlbumDetails(albums[i].href);
-        if(fullAlbumDetails !== ''){
-            const artists = getAuthors(albums[i]);
-            const nameAlbum = albums[i].name;
-            
-            let link;
-            let tracklist;
-            let featuredArtists;
-            let album;
-    
-            if(fullAlbumDetails.total_tracks > 1){
-                const title = artists + '\n' + nameAlbum;
-                tracklist = getTracklist(fullAlbumDetails, artists, title);
-                link = albums[i].external_urls.spotify;
-                album = new Album({
-                    nameAlbum: nameAlbum,
-                    artists: artists,
-                    featArtists: '',
-                    label: fullAlbumDetails.label,
-                    releaseDate: albums[i].release_date,
-                    tracklist: tracklist,
-                    coverArt: fullAlbumDetails.images[0].url,
-                    spotifyLink: link
-                })
-            } else {
-                featuredArtists = getFeaturedArtists(fullAlbumDetails, artists);
-                link = fullAlbumDetails.tracks.items[0].external_urls.spotify;
-                album = new Album({
-                    nameAlbum: nameAlbum,
-                    artists: artists,
-                    featArtists: featuredArtists,
-                    label: fullAlbumDetails.label,
-                    releaseDate: albums[i].release_date,
-                    tracklist: '',
-                    coverArt: fullAlbumDetails.images[0].url,
-                    spotifyLink: link
-                })
-            }
-    
-            latestReleases.push(album);
-        } else {
-            return '';
+        let fullAlbumDetails = await getFullAlbumDetails(albums[i].href);
+
+        while(fullAlbumDetails === undefined){
+            fullAlbumDetails = await getFullAlbumDetails(albums[i].href);
         }
+
+        const artists = getAuthors(albums[i]);
+        const nameAlbum = albums[i].name;
+        
+        let link;
+        let tracklist;
+        let featuredArtists;
+        let album;
+
+        if(fullAlbumDetails.total_tracks > 1){
+            const title = artists + '\n' + nameAlbum;
+            tracklist = getTracklist(fullAlbumDetails, artists, title);
+            link = albums[i].external_urls.spotify;
+            album = new Album({
+                nameAlbum: nameAlbum,
+                artists: artists,
+                featArtists: '',
+                label: fullAlbumDetails.label,
+                releaseDate: albums[i].release_date,
+                tracklist: tracklist,
+                coverArt: fullAlbumDetails.images[0].url,
+                spotifyLink: link
+            })
+        } else {
+            featuredArtists = getFeaturedArtists(fullAlbumDetails, artists);
+            link = fullAlbumDetails.tracks.items[0].external_urls.spotify;
+            album = new Album({
+                nameAlbum: nameAlbum,
+                artists: artists,
+                featArtists: featuredArtists,
+                label: fullAlbumDetails.label,
+                releaseDate: albums[i].release_date,
+                tracklist: '',
+                coverArt: fullAlbumDetails.images[0].url,
+                spotifyLink: link
+            })
+        }
+
+        latestReleases.push(album);
     }
 
     return latestReleases;
@@ -202,10 +214,10 @@ async function getLatestAlbumObjects(artistId){
     let latestReleases = [];
     let dataAlbums;
     try{
-        dataAlbums = await spotify.spotifyClient.getArtistAlbums(artistId, {offset: 0, include_groups: 'album,single,appears_on'})
+        dataAlbums = await spotify.spotifyClient.getArtistAlbums(artistId, {offset: 0, include_groups: 'album,single'})
     } catch (err){
-        setTimeout(() => getLatestAlbumObjects(artistId), (err.headers['retry-after'] * 1000))
-        return [];
+        await sleep(err.headers['retry-after'] * 1000);
+        return;
     }
 
     if(dataAlbums.body.items.length !== 0){
