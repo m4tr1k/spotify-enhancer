@@ -169,42 +169,44 @@ async function getAlbumInfos(albums){
 
         const artists = getAuthors(albums[i]);
         const nameAlbum = albums[i].name;
-        
-        let link;
-        let tracklist;
-        let featuredArtists;
-        let album;
 
-        if(fullAlbumDetails.total_tracks > 1){
-            const title = artists + '\n' + nameAlbum;
-            tracklist = getTracklist(fullAlbumDetails, artists, title);
-            link = albums[i].external_urls.spotify;
-            album = new Album({
-                nameAlbum: nameAlbum,
-                artists: artists,
-                featArtists: '',
-                label: fullAlbumDetails.label,
-                releaseDate: albums[i].release_date,
-                tracklist: tracklist,
-                coverArt: fullAlbumDetails.images[0].url,
-                spotifyLink: link
-            })
-        } else {
-            featuredArtists = getFeaturedArtists(fullAlbumDetails, artists);
-            link = fullAlbumDetails.tracks.items[0].external_urls.spotify;
-            album = new Album({
-                nameAlbum: nameAlbum,
-                artists: artists,
-                featArtists: featuredArtists,
-                label: fullAlbumDetails.label,
-                releaseDate: albums[i].release_date,
-                tracklist: '',
-                coverArt: fullAlbumDetails.images[0].url,
-                spotifyLink: link
-            })
+        if(!latestReleases.some(release => release.nameAlbum.toLowerCase().includes(nameAlbum.toLowerCase()))){
+            let link;
+            let tracklist;
+            let featuredArtists;
+            let album;
+
+            if(fullAlbumDetails.total_tracks > 1){
+                const title = artists + '\n' + nameAlbum;
+                tracklist = getTracklist(fullAlbumDetails, artists, title);
+                link = albums[i].external_urls.spotify;
+                album = new Album({
+                    nameAlbum: nameAlbum,
+                    artists: artists,
+                    featArtists: '',
+                    label: fullAlbumDetails.label,
+                    releaseDate: albums[i].release_date,
+                    tracklist: tracklist,
+                    coverArt: fullAlbumDetails.images[0].url,
+                    spotifyLink: link
+                })
+            } else {
+                featuredArtists = getFeaturedArtists(fullAlbumDetails, artists);
+                link = fullAlbumDetails.tracks.items[0].external_urls.spotify;
+                album = new Album({
+                    nameAlbum: nameAlbum,
+                    artists: artists,
+                    featArtists: featuredArtists,
+                    label: fullAlbumDetails.label,
+                    releaseDate: albums[i].release_date,
+                    tracklist: '',
+                    coverArt: fullAlbumDetails.images[0].url,
+                    spotifyLink: link
+                })
+            }
+
+            latestReleases.push(album);
         }
-
-        latestReleases.push(album);
     }
 
     return latestReleases;
