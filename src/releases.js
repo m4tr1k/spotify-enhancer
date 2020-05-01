@@ -73,15 +73,21 @@ function getAuthors(album){
         if(!album.name.includes(artist.name)){
             return artist.name
         }
-    }).map(artist => artist.name);                      
+    }).map(artist => artist.name);
     var authors = '';
-
-    for(var i = 0; i < albumArtists.length - 1; i++){
-        authors += albumArtists[i] + ' & ';
-    }
-
-    authors += albumArtists[albumArtists.length - 1];
-    return authors
+    if(albumArtists.length !== 0){
+        for(var i = 0; i < albumArtists.length - 1; i++){
+            authors += albumArtists[i] + ' & ';
+        }
+        authors += albumArtists[albumArtists.length - 1];
+    } else {
+        for(var i = 0; i < album.artists.length - 1; i++){
+            authors += album.artists[i].name + ' & ';
+        }
+        authors += album.artists[album.artists.length - 1].name;
+    }   
+    
+    return authors;
 }
 
 function getFeaturedArtists(fullAlbumDetails, artists){
