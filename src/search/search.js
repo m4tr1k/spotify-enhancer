@@ -32,12 +32,16 @@ async function searchArtists(artists, msgDiscord){
                         break;
                 }
     
-                const artist = await spotify.spotifyClient.getArtist(id);
-                info = new InfoIDs({
-                    artistId: id,
-                    artistName: artist.body.name
-                })
-                artistsIDs.push(info);
+                try{
+                    const artist = await spotify.spotifyClient.getArtist(id);
+                    info = new InfoIDs({
+                        artistId: id,
+                        artistName: artist.body.name
+                    })
+                    artistsIDs.push(info);
+                } catch (err){
+                    msgDiscord.reply('It seems that the artist with the id **' + id + '** does not exist');
+                }
             } else {
                 const artist = await searchArtistByName(artists[i], msgDiscord);
                 if(artist !== '' && artist !== null){
