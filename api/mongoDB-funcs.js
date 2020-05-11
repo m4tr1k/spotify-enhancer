@@ -197,9 +197,8 @@ async function getIdGuildsArtist(artistName){
 }
 
 async function updateNewReleases(album){
-    const artists = album.artists.split('&');
-    for(var i = 0; i < artists.length; i++){
-        updateReleases(artists[i].trim(), album);
+    for(var i = 0; i < album.allArtists.length; i++){
+        updateReleases(album.allArtists[i].trim(), album);
     }
 }
 

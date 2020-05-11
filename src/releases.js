@@ -6,6 +6,7 @@ const db = require('../api/mongoDB-funcs');
 
 var Album = function(props){
     this.nameAlbum = props.nameAlbum;
+    this.allArtists = props.allArtists;
     this.artists = props.artists;
     this.featArtists = props.featArtists;
     this.label = props.label
@@ -174,6 +175,7 @@ async function getAlbumInfos(albums){
         }
 
         const artists = getAuthors(albums[i]);
+        const allArtists = albums[i].artists.map(artist => artist.name);
         const nameAlbum = albums[i].name;
 
         if(!latestReleases.some(release => release.nameAlbum.toLowerCase().includes(nameAlbum.toLowerCase()))){
@@ -188,6 +190,7 @@ async function getAlbumInfos(albums){
                 link = albums[i].external_urls.spotify;
                 album = new Album({
                     nameAlbum: nameAlbum,
+                    allArtists: allArtists,
                     artists: artists,
                     featArtists: '',
                     label: fullAlbumDetails.label,
@@ -201,6 +204,7 @@ async function getAlbumInfos(albums){
                 link = fullAlbumDetails.tracks.items[0].external_urls.spotify;
                 album = new Album({
                     nameAlbum: nameAlbum,
+                    allArtists: allArtists,
                     artists: artists,
                     featArtists: featuredArtists,
                     label: fullAlbumDetails.label,
