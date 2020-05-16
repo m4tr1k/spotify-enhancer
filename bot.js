@@ -4,6 +4,7 @@ const pastebin = require('./api/pastebin-properties');
 const spotify = require('./api/spotify-properties').client;
 const auth = require('./auth.json');
 
+const help = require('./commands/help');
 const checkReleases = require('./src/checkReleases');
 const server = require('./src/server');
 const search = require('./src/search/search');
@@ -12,6 +13,8 @@ const prefix = '!SE';
 var app = express();
 
 discordClient.on('ready', () => {
+
+  discordClient.user.setActivity("!SE help", {type: 'LISTENING'});
 
   app.get('/', (req, res) => {
     res.redirect(spotify.getAuthorizeURL());
@@ -72,45 +75,37 @@ discordClient.on('message', msg => {
     if(msg.content.startsWith(prefix)) {
       const content = msg.content.replace(prefix, '').trim();
       const option = content.split(' ')[0].toLowerCase();
-      switch(option){
-        case 'artists':
-          checkReleases.seeArtistsGuild(msg)
-          break;
-        case '+':
-          checkReleases.verifyNewReleasesCommandsChannel(msg.channel.id).then(cursor => {
-            cursor.hasNext().then( result => {
-              if(result){
+      checkReleases.verifyNewReleasesCommandsChannel(msg.channel.id).then(cursor => {
+        cursor.hasNext().then( result => {
+          if(result){
+            switch(option){
+              case 'help':
+                help.showHelpCommands(msg);
+                break;
+              case 'artists':
+                checkReleases.seeArtistsGuild(msg)
+                break;
+              case '+':
                 var possibleArtists = content.replace('+', "").split(',').map(item => item.trim());
                 search.searchArtists(possibleArtists, msg).then( artists => {
                   if(artists !== null){
                     checkReleases.addArtistsToGuild(artists, cursor, msg);
                   }
                 })
-              } else {
-                msg.reply("This is not the channel to add or remove artists...")
-              }
-            })
-          })
-          break;
-        case '-':
-          checkReleases.verifyNewReleasesCommandsChannel(msg.channel.id).then(cursor => {
-            cursor.hasNext().then( result => {
-              if(result){
+                break;
+              case '-':
                 var possibleArtists = content.replace('-', "").split(',').map(item => item.trim());
                 checkReleases.removeArtistsGuild(possibleArtists, cursor, msg);
-              } else {
-                msg.reply("This is not the channel to add or remove artists...")
-              }
-            })
-          })
-          break;
-        default:
-          msg.reply("I don't know what you want to do...")
-          break;
-      }
-    }   
-});
-
+                break;
+              default:
+                msg.reply("I don't know what you want to do...")
+                break;
+            }
+          }
+        })   
+      })
+    }
+})
 discordClient.on('guildCreate', guild => {
   if(guild.available){
     server.welcome(guild);
