@@ -45,13 +45,18 @@ async function insertGuildDB(idServer, idReleasesChannel, idReleasesCommandsChan
 async function removeGuildDB(idServer){
     await checkConnection();
 
-    const number = await findGuild(idServer);
+    await deleteAllArtists(idServer);
 
-    if(number !== 0){
-        await client.db.collection('guild').deleteOne({
-            _id: idServer
-        })
-    }
+    client.db.collection('guild').deleteOne({
+        _id: idServer
+    })
+}
+
+async function getReleasesChannel(idServer){
+    const server = await client.db.collection('guild').findOne({
+        _id: idServer
+    })
+    return server.idReleasesChannel;
 }
 
 async function insertArtistsDB(artists, guild, msgDiscord){
@@ -233,6 +238,15 @@ async function updateReleases(artistName, album){
     }
 }
 
+async function deleteAllArtists(idServer){
+    const releasesChannel = await getReleasesChannel(idServer);
+
+    await client.db.collection('artist').updateMany(
+        {idGuildChannels: releasesChannel},
+        {$pull : {idGuildChannels: releasesChannel}}
+    )
+}
+
 exports.insertGuildDB = insertGuildDB
 exports.removeGuildDB = removeGuildDB
 exports.insertArtistsDB = insertArtistsDB
@@ -243,3 +257,4 @@ exports.getPaste = getPaste
 exports.getAllArtists = getAllArtists
 exports.getIdGuildsArtist = getIdGuildsArtist
 exports.updateNewReleases = updateNewReleases
+exports.deleteAllArtists = deleteAllArtists
