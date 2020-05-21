@@ -7,6 +7,7 @@ const auth = require('./auth.json');
 const help = require('./commands/help');
 const checkReleases = require('./src/checkReleases');
 const server = require('./src/server');
+const reset = require('./commands/reset');
 const search = require('./src/search/search');
 const prefix = '!SE';
 
@@ -79,6 +80,7 @@ discordClient.on('message', msg => {
         cursor.hasNext().then( result => {
           if(result){
             switch(option){
+              case 'reset':
               case 'help':
                 help.showHelpCommands(msg);
                 break;
