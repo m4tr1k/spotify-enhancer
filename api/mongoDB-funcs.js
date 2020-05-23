@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const client = mongoose.connection;
-const pastebin = require('./pastebin-properties');
 const releases = require('../src/releases');
 
 async function newConnection(){
@@ -129,8 +128,7 @@ async function insertArtistsDB(artists, guild, msgDiscord){
 
     if(newArtists){
         artistsAddedDB += '**';
-        const message = await getArtistsGuild(guild.idReleasesChannel);
-        Promise.all([pastebin.editPaste(message, guild), msgDiscord.channel.send(artistsAddedDB + ' registered in the server successfully!')])
+        msgDiscord.channel.send(artistsAddedDB + ' registered in the server successfully!');
     }
 }
 
@@ -152,8 +150,7 @@ async function removeArtistsDB(artistNames, guild, msgDiscord){
     }
 
     if(removedArtists){
-        const message = await getArtistsGuild(guild.idReleasesChannel);
-        Promise.all([pastebin.editPaste(message, guild), msgDiscord.channel.send('Artists successfully deleted!')])
+        msgDiscord.channel.send('Artists successfully deleted!');
     }
 }
 
@@ -173,15 +170,6 @@ async function getArtistsGuild(idReleasesChannel){
     }
 
     return artists;
-}
-
-async function getPaste(idServer){
-    await checkConnection();
-    const cursor = await client.db.collection('guild').find({
-        _id: idServer
-    }, {projection: {idPaste: 1, _id: 0}}).toArray();
-    const idPaste = cursor.map(obj => obj.idPaste)
-    return idPaste[0]; 
 }
 
 async function getAllArtists(){
@@ -253,8 +241,8 @@ exports.insertArtistsDB = insertArtistsDB
 exports.findChannel = findChannel
 exports.client = client
 exports.removeArtistsDB = removeArtistsDB
-exports.getPaste = getPaste
 exports.getAllArtists = getAllArtists
 exports.getIdGuildsArtist = getIdGuildsArtist
 exports.updateNewReleases = updateNewReleases
 exports.deleteAllArtists = deleteAllArtists
+exports.getArtistsGuild = getArtistsGuild

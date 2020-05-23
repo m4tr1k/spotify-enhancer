@@ -1,11 +1,11 @@
 const express = require('express');
 const discordClient = require('./api/discord-properties').discordClient;
-const pastebin = require('./api/pastebin-properties');
 const spotify = require('./api/spotify-properties').client;
 const auth = require('./auth.json');
 
 const help = require('./commands/help');
 const checkReleases = require('./src/checkReleases');
+const seeArtistsGuild = require('./commands/artists').seeArtistsGuild;
 const server = require('./src/server');
 const reset = require('./commands/reset');
 const search = require('./src/search/search');
@@ -30,7 +30,6 @@ discordClient.on('ready', () => {
         data => {
           spotify.spotifyClient.setAccessToken(data.body['access_token']);
           spotify.spotifyClient.setRefreshToken(data.body['refresh_token']);
-          pastebin.loginPastebin();
 
           console.log(`Spotify connection working...`);
         },
@@ -81,11 +80,13 @@ discordClient.on('message', msg => {
           if(result){
             switch(option){
               case 'reset':
+                reset.resetDB(msg);
+                break;
               case 'help':
                 help.showHelpCommands(msg);
                 break;
               case 'artists':
-                checkReleases.seeArtistsGuild(msg)
+                seeArtistsGuild(msg, cursor);
                 break;
               case '+':
                 var possibleArtists = content.replace('+', "").split(',').map(item => item.trim());
