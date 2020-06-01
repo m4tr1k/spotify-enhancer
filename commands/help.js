@@ -7,9 +7,9 @@ async function showHelpCommands(msg){
                         .setTitle('Need some help?')
                         .setDescription(description)
                         .addFields({name: "**!SE artists**", value: "List of all artists registered in this server"},
-                        {name: "**!SE reset**", value: "Database reset (command only available for the admin)"},
-                        {name: "**!SE+** *Name of the artist/Spotify URI/Spotify URL, Name of the artist/Spotify URI/Spotify URL...*", value: "Add one or more artists to the database (seperated with commas)"},
-                        {name: "**!SE-** *Name of the artist, Name of the artist...*", value: "Remove one or more artists to the database (seperated with commas)"}))
+                        {name: "**!SE reset**", value: "Server database reset (command only available for the admin)"},
+                        {name: "**!SE+** *Name of the artist/Spotify URI/Spotify URL, Name of the artist/Spotify URI/Spotify URL...*", value: "Add one or more artists (up to 20 in a single search) to the server (seperated with commas)"},
+                        {name: "**!SE-** *Name of the artist, Name of the artist...*", value: "Remove one or more artists to the server (seperated with commas)"}))
                         
 }
 
