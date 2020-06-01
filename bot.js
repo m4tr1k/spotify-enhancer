@@ -90,11 +90,15 @@ discordClient.on('message', msg => {
                 break;
               case '+':
                 var possibleArtists = content.replace('+', "").split(',').map(item => item.trim());
-                search.searchArtists(possibleArtists, msg).then( artists => {
-                  if(artists !== null){
-                    checkReleases.addArtistsToGuild(artists, cursor, msg);
-                  }
-                })
+                if(possibleArtists.length < 20){
+                  search.searchArtists(possibleArtists, msg).then( artists => {
+                    if(artists !== null){
+                      checkReleases.addArtistsToGuild(artists, cursor, msg);
+                    }
+                  })
+                } else {
+                  msg.channel.send("It is not possible to search more than 20 artists in a single search!");
+                }
                 break;
               case '-':
                 var possibleArtists = content.replace('-', "").split(',').map(item => item.trim());

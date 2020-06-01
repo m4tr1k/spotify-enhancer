@@ -12,7 +12,8 @@ var InfoIDs = function(props){
 }
 
 async function searchArtists(artists, msgDiscord){
-    let artistsIDs = [];
+    let artistsInfos = [];
+    let artistIDs = [];
     for(var i = 0; i < artists.length; i++){
         if(artists[i] !== ''){
             if(artists[i].startsWith("spotify:artist:") || artists[i].startsWith("https://open.spotify.com/artist/")){
@@ -31,26 +32,33 @@ async function searchArtists(artists, msgDiscord){
                         }
                         break;
                 }
-    
-                try{
-                    const artist = await spotify.spotifyClient.getArtist(id);
-                    info = new InfoIDs({
-                        artistId: id,
-                        artistName: artist.body.name
-                    })
-                    artistsIDs.push(info);
-                } catch (err){
-                    msgDiscord.reply('It seems that the artist with the id **' + id + '** does not exist');
-                }
+                artistIDs.push(id);
             } else {
                 const artist = await searchArtistByName(artists[i], msgDiscord);
                 if(artist !== '' && artist !== null){
-                    artistsIDs.push(artist);
+                    artistsInfos.push(artist);
                 }
             } 
         }
     }
-    return artistsIDs;
+
+    if(artistIDs.length != 0){
+        const artistDetails = await spotify.spotifyClient.getArtists(artistIDs);
+
+        for(let i = 0; i < artistDetails.body.artists.length; i++){
+            if(artistDetails.body.artists[i] != null){
+                info = new InfoIDs({
+                    artistId: artistIDs[i],
+                    artistName: artistDetails.body.artists[i].name
+                })
+                artistsInfos.push(info);
+            } else {
+                msgDiscord.reply('It seems that the artist with the id **' + artistIDs[i] + '** does not exist');
+            }
+        }
+    }
+
+    return artistsInfos;
 }
 
  async function searchArtistByName(artistName, msgDiscord){
