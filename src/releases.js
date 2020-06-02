@@ -229,7 +229,7 @@ async function getLatestAlbumObjects(artistId){
         dataAlbums = await spotify.spotifyClient.getArtistAlbums(artistId, {offset: 0, include_groups: 'album,single'})
     } catch (err){
         await sleep(err.headers['retry-after'] * 1000);
-        return;
+        return [];
     }
 
     if(dataAlbums.body.items.length !== 0){
@@ -291,3 +291,4 @@ exports.sendNewReleases = sendNewReleases;
 exports.getLatestReleases = getLatestReleases;
 exports.createEmbeds = createEmbeds;
 exports.createEmbedAlbum = createEmbedAlbum;
+exports.sendMessages = sendMessages;
