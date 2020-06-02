@@ -235,6 +235,13 @@ async function deleteAllArtists(idServer){
     )
 }
 
+function getArtist(idArtist){
+    const cursor = client.db.collection('artist').find({
+        _id: idArtist
+    })
+    return cursor
+}
+
 exports.insertGuildDB = insertGuildDB
 exports.removeGuildDB = removeGuildDB
 exports.insertArtistsDB = insertArtistsDB
@@ -246,3 +253,4 @@ exports.getIdGuildsArtist = getIdGuildsArtist
 exports.updateNewReleases = updateNewReleases
 exports.deleteAllArtists = deleteAllArtists
 exports.getArtistsGuild = getArtistsGuild
+exports.getArtist = getArtist

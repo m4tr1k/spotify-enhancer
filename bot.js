@@ -6,6 +6,7 @@ const auth = require('./auth.json');
 const help = require('./commands/help');
 const checkReleases = require('./src/checkReleases');
 const seeArtistsGuild = require('./commands/artists').seeArtistsGuild;
+const newReleases = require('./commands/new').newReleases;
 const server = require('./src/server');
 const reset = require('./commands/reset');
 const search = require('./src/search/search');
@@ -87,6 +88,9 @@ discordClient.on('message', msg => {
                 break;
               case 'artists':
                 seeArtistsGuild(msg, cursor);
+                break;
+              case 'new':
+                newReleases(msg, cursor);
                 break;
               case '+':
                 var possibleArtists = content.replace('+', "").split(',').map(item => item.trim());

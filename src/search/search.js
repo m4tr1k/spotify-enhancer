@@ -17,21 +17,7 @@ async function searchArtists(artists, msgDiscord){
     for(var i = 0; i < artists.length; i++){
         if(artists[i] !== ''){
             if(artists[i].startsWith("spotify:artist:") || artists[i].startsWith("https://open.spotify.com/artist/")){
-                const prefixURI = artists[i].startsWith("spotify:artist:");
-                let id;
-    
-                switch(prefixURI){
-                    case true:
-                        id = artists[i].replace("spotify:artist:", "");
-                        break;
-                    case false:
-                        if(artists[i].indexOf('?') !== -1){
-                            id = artists[i].substring(artists[i].lastIndexOf('/') + 1, artists[i].lastIndexOf('?'));
-                        } else {
-                            id = artists[i].substring(artists[i].lastIndexOf('/') + 1);
-                        }
-                        break;
-                }
+                const id = getId(artists[i]);
                 artistIDs.push(id);
             } else {
                 const artist = await searchArtistByName(artists[i], msgDiscord);
@@ -59,6 +45,26 @@ async function searchArtists(artists, msgDiscord){
     }
 
     return artistsInfos;
+}
+
+function getId(artist){
+    const prefixURI = artist.startsWith("spotify:artist:");
+    let id;
+
+    switch(prefixURI){
+        case true:
+            id = artist.replace("spotify:artist:", "");
+            break;
+        case false:
+            if(artist.indexOf('?') !== -1){
+                id = artist.substring(artist.lastIndexOf('/') + 1, artist.lastIndexOf('?'));
+            } else {
+                id = artist.substring(artist.lastIndexOf('/') + 1);
+            }
+            break;
+    }
+
+    return id;
 }
 
  async function searchArtistByName(artistName, msgDiscord){
@@ -154,3 +160,5 @@ discordClient.addListener('delete-reaction-add', () => {
 })
 
 exports.searchArtists = searchArtists;
+exports.getId = getId;
+exports.searchArtistByName = searchArtistByName;
