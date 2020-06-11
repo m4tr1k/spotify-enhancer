@@ -158,7 +158,7 @@ async function checkNewReleases(artist){
 
 async function getLatestReleases(artistId){
     const albums = await getLatestAlbumObjects(artistId);
-    if(albums.length !== 0){
+    if(albums.length !== 0 && albums !== undefined){
         return await getAlbumInfos(albums);
     } else {
         return '';
@@ -229,7 +229,7 @@ async function getLatestAlbumObjects(artistId){
         dataAlbums = await spotify.spotifyClient.getArtistAlbums(artistId, {offset: 0, include_groups: 'album,single'})
     } catch (err){
         await sleep(err.headers['retry-after'] * 1000);
-        return [];
+        return;
     }
 
     if(dataAlbums.body.items.length !== 0){
