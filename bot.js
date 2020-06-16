@@ -3,6 +3,7 @@ const discordClient = require('./api/discord-properties').discordClient;
 const spotify = require('./api/spotify-properties').client;
 const auth = require('./auth.json');
 
+const dbNewConnection = require('./api/mongoDB-funcs').newConnection;
 const help = require('./commands/help');
 const checkReleases = require('./src/checkReleases');
 const seeArtistsGuild = require('./commands/artists').seeArtistsGuild;
@@ -50,6 +51,7 @@ discordClient.on('ready', () => {
           console.log(timeUntilCheck);
           setTimeout(() => {sendNewReleases(), setInterval(() => sendNewReleases(), 3600000)}, timeUntilCheck);
         }
+        dbNewConnection();
         setInterval(refreshToken, 3600000);
       })
     }
