@@ -114,6 +114,15 @@ discordClient.on('message', msg => {
                 msg.reply("I don't know what you want to do...")
                 break;
             }
+          } else {
+            switch(option){
+              case 'addchannel':
+                setupReleasesChannel.addChannel(msg);
+                break;
+              case 'removechannel':
+                setupReleasesChannel.removeChannel(msg);
+                break;
+            }
           }
         })   
       })
@@ -129,6 +138,10 @@ discordClient.on('guildDelete', guild => {
   if(guild.available){
     server.removeGuild(guild);
   }
+})
+
+discordClient.on('channelDelete', channel => {
+    setupReleasesChannel.channelDelete(channel);
 })
 
 console.log('Listening on 8888');

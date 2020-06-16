@@ -27,7 +27,7 @@ async function findGuild(idServer){
     return number;
 }
 
-async function insertGuildDB(idServer, idReleasesChannel, idReleasesCommandsChannel){
+async function insertGuildDB(idServer, idReleasesCommandsChannel){
     await checkConnection();
     
     const number = await findGuild(idServer);
@@ -35,7 +35,7 @@ async function insertGuildDB(idServer, idReleasesChannel, idReleasesCommandsChan
     if(number === 0){
         await client.db.collection('guild').insertOne({
             _id: idServer, 
-            idReleasesChannel: idReleasesChannel,
+            idReleasesChannels: [],
             idReleasesCommandsChannel: idReleasesCommandsChannel
         })
     }
@@ -228,7 +228,10 @@ async function updateReleases(artistName, album){
 
 async function deleteAllArtists(idServer){
     const releasesChannel = await getReleasesChannel(idServer);
+    deleteAllArtistsReleasesChannel(releasesChannel)
+}
 
+async function deleteAllArtistsReleasesChannel(releasesChannel){
     await client.db.collection('artist').updateMany(
         {idGuildChannels: releasesChannel},
         {$pull : {idGuildChannels: releasesChannel}}
@@ -242,6 +245,39 @@ function getArtist(idArtist){
     return cursor
 }
 
+async function addReleasesChannel(channelID, guildID){
+    const result = await client.db.collection('guild').updateOne(
+        {_id: guildID},
+        {$addToSet: {idReleasesChannels: channelID}}
+    )
+    return result.modifiedCount != 0;
+}
+
+async function removeReleasesChannel(channelID, guildID){
+    const result = await client.db.collection('guild').updateOne(
+        {_id: guildID},
+        {$pull: {idReleasesChannels: channelID}}
+    )
+    return result.modifiedCount != 0;
+}
+
+async function removeReleasesChannel(channelID){
+    const result = await client.db.collection('guild').updateOne(
+        {idReleasesChannels: channelID},
+        {$pull: {idReleasesChannels: channelID}}
+    )
+    return result.modifiedCount != 0;
+}
+
+async function numberReleasesChannels(guildID){
+    const cursor = client.db.collection('guild').find(
+        {_id: guildID}
+    )
+    const guild = await cursor.next();
+    return guild.idReleasesChannels.length;
+}
+
+exports.newConnection = newConnection
 exports.insertGuildDB = insertGuildDB
 exports.removeGuildDB = removeGuildDB
 exports.insertArtistsDB = insertArtistsDB
@@ -252,5 +288,9 @@ exports.getAllArtists = getAllArtists
 exports.getIdGuildsArtist = getIdGuildsArtist
 exports.updateNewReleases = updateNewReleases
 exports.deleteAllArtists = deleteAllArtists
+exports.deleteAllArtistsReleasesChannel = deleteAllArtistsReleasesChannel
 exports.getArtistsGuild = getArtistsGuild
 exports.getArtist = getArtist
+exports.addReleasesChannel = addReleasesChannel
+exports.removeReleasesChannel = removeReleasesChannel
+exports.numberReleasesChannels = numberReleasesChannels
