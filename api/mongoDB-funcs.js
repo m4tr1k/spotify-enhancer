@@ -20,30 +20,15 @@ async function findChannel(idChannel){
     return cursor
 }
 
-async function findGuild(idServer){
-    const number = await client.db.collection('guild').find({
-        _id: idServer
-    }).count();
-    return number;
-}
-
 async function insertGuildDB(idServer, idReleasesCommandsChannel){
-    await checkConnection();
-    
-    const number = await findGuild(idServer);
-
-    if(number === 0){
-        await client.db.collection('guild').insertOne({
-            _id: idServer, 
-            idReleasesChannels: [],
-            idReleasesCommandsChannel: idReleasesCommandsChannel
-        })
-    }
+    await client.db.collection('guild').insertOne({
+        _id: idServer, 
+        idReleasesChannels: [],
+        idReleasesCommandsChannel: idReleasesCommandsChannel
+    })
 }
 
 async function removeGuildDB(idServer){
-    await checkConnection();
-
     await deleteAllArtists(idServer);
 
     client.db.collection('guild').deleteOne({
@@ -51,14 +36,14 @@ async function removeGuildDB(idServer){
     })
 }
 
-async function getReleasesChannel(idServer){
+async function getReleasesChannels(idServer){
     const server = await client.db.collection('guild').findOne({
         _id: idServer
     })
-    return server.idReleasesChannel;
+    return server.idReleasesChannels;
 }
 
-async function insertArtistsDB(artists, guild, msgDiscord){
+async function insertArtistsDB(artists, idReleasesChannel, msgDiscord){
     let newArtists = false;
     let artistsAddedDB = '**';
     for(var i = 0; i < artists.length; i++){
@@ -68,13 +53,13 @@ async function insertArtistsDB(artists, guild, msgDiscord){
         const isArtistDB = await cursor.hasNext();
         if(isArtistDB){
             const artist = await cursor.next();
-            if(artist.idGuildChannels.includes(guild.idReleasesChannel)){
+            if(artist.idGuildChannels.includes(idReleasesChannel)){
                 msgDiscord.channel.send('**' + artists[i].artistName + '** is already registed in the database!'); 
             } else {
                 const document = await client.collection('artist').findOneAndUpdate(
                     {_id: artists[i].artistId},
                     {
-                        $push: { idGuildChannels: guild.idReleasesChannel }
+                        $push: { idGuildChannels: idReleasesChannel }
                     }
                 )
                 
@@ -84,7 +69,7 @@ async function insertArtistsDB(artists, guild, msgDiscord){
 
                 if(releaseDate >= currentDate){
                     const idGuildChannel = [];
-                    idGuildChannel.push(guild.idReleasesChannel);
+                    idGuildChannel.push(idReleasesChannel);
                     releases.createEmbeds(document.value.latestReleases, idGuildChannel);
                 }
                 if(artistsAddedDB === '**'){
@@ -103,7 +88,7 @@ async function insertArtistsDB(artists, guild, msgDiscord){
     
                 if(releaseDate >= currentDate){
                     const idGuildChannel = [];
-                    idGuildChannel.push(guild.idReleasesChannel);
+                    idGuildChannel.push(idReleasesChannel);
                     releases.createEmbeds(latestReleases, idGuildChannel);
                 }
     
@@ -113,7 +98,7 @@ async function insertArtistsDB(artists, guild, msgDiscord){
                     nameArtist_lowerCase: artists[i].artistName.toLowerCase(),
                     latestReleases: latestReleases,
                     idGuildChannels: [
-                        guild.idReleasesChannel
+                        idReleasesChannel
                     ]
                 })
                 if(artistsAddedDB === '**'){
@@ -132,13 +117,13 @@ async function insertArtistsDB(artists, guild, msgDiscord){
     }
 }
 
-async function removeArtistsDB(artistNames, guild, msgDiscord){
+async function removeArtistsDB(artistNames, idReleasesChannel, msgDiscord){
     let removedArtists = false;
     for(var i = 0; i < artistNames.length; i++){
         const newDocument = await client.collection('artist').updateOne(
             {nameArtist_lowerCase: artistNames[i].toLowerCase()},
             {
-                $pull: { idGuildChannels: guild.idReleasesChannel }
+                $pull: { idGuildChannels: idReleasesChannel }
             }
         )
 
@@ -154,13 +139,24 @@ async function removeArtistsDB(artistNames, guild, msgDiscord){
     }
 }
 
-async function getArtistsGuild(idReleasesChannel){
-    await checkConnection();
+async function getArtistsGuild(idReleasesChannels){    
+    const cursor = client.db.collection('artist').find({
+        idGuildChannels: {$in: idReleasesChannels}
+    }).sort({nameArtist: 1});
 
-    let artists = '';
+    return getListArtists(cursor);
+}
+
+async function getArtistsChannel(idReleasesChannel){    
     const cursor = client.db.collection('artist').find({
         idGuildChannels: idReleasesChannel
     }).sort({nameArtist: 1});
+
+    return getListArtists(cursor);
+}
+
+async function getListArtists(cursor){
+    let artists = '';
 
     let hasNextArtist = await cursor.hasNext();
     while(hasNextArtist){
@@ -227,8 +223,12 @@ async function updateReleases(artistName, album){
 }
 
 async function deleteAllArtists(idServer){
-    const releasesChannel = await getReleasesChannel(idServer);
-    deleteAllArtistsReleasesChannel(releasesChannel)
+    const releasesChannels = await getReleasesChannels(idServer);
+    
+    await client.db.collection('artist').updateMany(
+        {idGuildChannels: releasesChannels},
+        {$pull : {idGuildChannels: {$in: releasesChannels}}}
+    )
 }
 
 async function deleteAllArtistsReleasesChannel(releasesChannel){
@@ -290,6 +290,7 @@ exports.updateNewReleases = updateNewReleases
 exports.deleteAllArtists = deleteAllArtists
 exports.deleteAllArtistsReleasesChannel = deleteAllArtistsReleasesChannel
 exports.getArtistsGuild = getArtistsGuild
+exports.getArtistsChannel = getArtistsChannel
 exports.getArtist = getArtist
 exports.addReleasesChannel = addReleasesChannel
 exports.removeReleasesChannel = removeReleasesChannel
