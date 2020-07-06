@@ -6,10 +6,11 @@ const auth = require('./auth.json');
 const dbNewConnection = require('./api/mongoDB-funcs').newConnection;
 const help = require('./commands/help');
 const checkReleases = require('./src/checkReleases');
-const seeArtistsGuild = require('./commands/artists').seeArtistsGuild;
+const seeArtists = require('./commands/artists').seeArtists;
 const newReleases = require('./commands/new').newReleases;
 const server = require('./src/server');
 const reset = require('./commands/reset');
+const setupReleasesChannel = require('./src/setupReleasesChannel');
 const search = require('./src/search/search');
 const prefix = '!SE';
 
@@ -34,6 +35,7 @@ discordClient.on('ready', () => {
           spotify.spotifyClient.setRefreshToken(data.body['refresh_token']);
 
           console.log(`Spotify connection working...`);
+          dbNewConnection();
         },
         err => {
           console.log('Something went wrong!', err);
@@ -51,7 +53,6 @@ discordClient.on('ready', () => {
           console.log(timeUntilCheck);
           setTimeout(() => {sendNewReleases(), setInterval(() => sendNewReleases(), 3600000)}, timeUntilCheck);
         }
-        dbNewConnection();
         setInterval(refreshToken, 3600000);
       })
     }
@@ -76,8 +77,8 @@ function refreshToken(){
 
 discordClient.on('message', msg => {
     if(msg.content.startsWith(prefix)) {
-      const content = msg.content.replace(prefix, '').trim();
-      const option = content.split(' ')[0].toLowerCase();
+      const content = msg.content.replace(prefix, '').trim().split(' ');
+      const option = content[0].toLowerCase();
       checkReleases.verifyNewReleasesCommandsChannel(msg.channel.id).then(cursor => {
         cursor.hasNext().then( result => {
           if(result){
@@ -89,10 +90,10 @@ discordClient.on('message', msg => {
                 help.showHelpCommands(msg);
                 break;
               case 'artists':
-                seeArtistsGuild(msg, cursor);
+                seeArtists(msg, content, cursor);
                 break;
               case 'new':
-                newReleases(msg, cursor);
+                newReleases(msg, content[content.length - 1], cursor);
                 break;
               case '+':
                 var possibleArtists = content.replace('+', "").split(',').map(item => item.trim());
