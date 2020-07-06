@@ -10,8 +10,10 @@ const seeArtists = require('./commands/artists').seeArtists;
 const newReleases = require('./commands/new').newReleases;
 const server = require('./src/server');
 const reset = require('./commands/reset');
+const addArtistsToGuild = require('./commands/addArtists').addArtistsToGuild;
+const removeArtistsGuild = require('./commands/removeArtists').removeArtistsGuild;
 const setupReleasesChannel = require('./src/setupReleasesChannel');
-const search = require('./src/search/search');
+
 const prefix = '!SE';
 
 var app = express();
@@ -96,20 +98,10 @@ discordClient.on('message', msg => {
                 newReleases(msg, content[content.length - 1], cursor);
                 break;
               case '+':
-                var possibleArtists = content.replace('+', "").split(',').map(item => item.trim());
-                if(possibleArtists.length < 20){
-                  search.searchArtists(possibleArtists, msg).then( artists => {
-                    if(artists !== null){
-                      checkReleases.addArtistsToGuild(artists, cursor, msg);
-                    }
-                  })
-                } else {
-                  msg.channel.send("It is not possible to search more than 20 artists in a single search!");
-                }
+                addArtistsToGuild(msg, content, cursor);
                 break;
               case '-':
-                var possibleArtists = content.replace('-', "").split(',').map(item => item.trim());
-                checkReleases.removeArtistsGuild(possibleArtists, cursor, msg);
+                removeArtistsGuild(msg, content, cursor);
                 break;
               default:
                 msg.reply("I don't know what you want to do...")

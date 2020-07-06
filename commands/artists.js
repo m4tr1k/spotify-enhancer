@@ -48,7 +48,7 @@ async function sendRegisteredArtists(artists, msgDiscord){
     const file = tmp.fileSync({mode: 0o644, name: 'artistsServer.txt'});
     fs.writeFileSync(file.name, artists);
 
-    await msgDiscord.channel.send('You can check the registered artists in the server here: ', {files: [file.name]});
+    await msgDiscord.channel.send('You can check the registered artists here: ', {files: [file.name]});
 
     file.removeCallback();
 }

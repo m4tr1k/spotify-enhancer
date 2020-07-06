@@ -117,13 +117,13 @@ async function insertArtistsDB(artists, idReleasesChannel, msgDiscord){
     }
 }
 
-async function removeArtistsDB(artistNames, idReleasesChannel, msgDiscord){
+async function removeArtistsDB(artistNames, idReleasesChannels, msgDiscord){
     let removedArtists = false;
     for(var i = 0; i < artistNames.length; i++){
         const newDocument = await client.collection('artist').updateOne(
             {nameArtist_lowerCase: artistNames[i].toLowerCase()},
             {
-                $pull: { idGuildChannels: idReleasesChannel }
+                $pull: { idGuildChannels: {$in: idReleasesChannels} }
             }
         )
 
