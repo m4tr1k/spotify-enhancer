@@ -12,6 +12,7 @@ const server = require('./src/server');
 const reset = require('./commands/reset');
 const addArtistsToGuild = require('./commands/addArtists').addArtistsToGuild;
 const removeArtistsGuild = require('./commands/removeArtists').removeArtistsGuild;
+const moveArtistsChannel = require('./commands/moveArtist').moveArtistsChannel;
 const setupReleasesChannel = require('./src/setupReleasesChannel');
 
 const prefix = '!SE';
@@ -102,6 +103,9 @@ discordClient.on('message', msg => {
                 break;
               case '-':
                 removeArtistsGuild(msg, content, cursor);
+                break;
+              case 'move':
+                moveArtistsChannel(msg, content, cursor);
                 break;
               default:
                 msg.reply("I don't know what you want to do...")

@@ -277,6 +277,23 @@ async function numberReleasesChannels(guildID){
     return guild.idReleasesChannels.length;
 }
 
+async function moveArtistsChannel(artistName, idFutureReleaseChannel, idReleasesChannels){
+    const documentResult = await client.db.collection('artist').updateOne(
+        {nameArtist_lowerCase: artistName.toLowerCase()},
+        {$pull: {idGuildChannels: {$in: idReleasesChannels}}}
+    )
+
+    if(documentResult.modifiedCount > 0){
+        await client.db.collection('artist').updateOne(
+            {nameArtist_lowerCase: artistName},
+            {$push: {idGuildChannels: idFutureReleaseChannel}}
+        )
+        return true;
+    }
+
+    return false;
+}
+
 exports.newConnection = newConnection
 exports.insertGuildDB = insertGuildDB
 exports.removeGuildDB = removeGuildDB
@@ -294,4 +311,5 @@ exports.getArtistsChannel = getArtistsChannel
 exports.getArtist = getArtist
 exports.addReleasesChannel = addReleasesChannel
 exports.removeReleasesChannel = removeReleasesChannel
+exports.moveArtistsChannel = moveArtistsChannel
 exports.numberReleasesChannels = numberReleasesChannels
