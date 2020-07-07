@@ -1,8 +1,8 @@
-const checkReleases = require('../src/checkReleases');
+const removeArtists = require('../src/checkReleases').removeArtistsGuild;
 
 async function removeArtistsGuild(msgDiscord, content, cursor){
     const possibleArtists = content.join(' ').replace('-', "").split(',').map(item => item.trim());
-    checkReleases.removeArtistsGuild(possibleArtists, cursor, msgDiscord);
+    removeArtists(possibleArtists, cursor, msgDiscord);
 }
 
 exports.removeArtistsGuild = removeArtistsGuild
