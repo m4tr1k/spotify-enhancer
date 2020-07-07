@@ -6,14 +6,13 @@ async function verifyNewReleasesCommandsChannel(idChannel){
     return isNewReleasesCommandsChannel;
 }
 
-async function addArtistsToGuild(artists, cursor, msgDiscord){
-    const guild = await cursor.next();
-    await db.insertArtistsDB(artists, guild, msgDiscord);
+async function addArtistsToGuild(artists, idReleasesChannel, msgDiscord){
+    await db.insertArtistsDB(artists, idReleasesChannel, msgDiscord);
 }
 
 async function removeArtistsGuild(artists, cursor, msgDiscord){
     const guild = await cursor.next();
-    await db.removeArtistsDB(artists, guild, msgDiscord);
+    await db.removeArtistsDB(artists, guild.idReleasesChannels, msgDiscord);
 }
 
 async function sendNewReleases(){
