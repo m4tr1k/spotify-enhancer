@@ -3,13 +3,18 @@ const discordClient = require('./api/discord-properties').discordClient;
 const spotify = require('./api/spotify-properties').client;
 const auth = require('./auth.json');
 
+const dbNewConnection = require('./api/mongoDB-funcs').newConnection;
 const help = require('./commands/help');
 const checkReleases = require('./src/checkReleases');
-const seeArtistsGuild = require('./commands/artists').seeArtistsGuild;
+const seeArtists = require('./commands/artists').seeArtists;
 const newReleases = require('./commands/new').newReleases;
 const server = require('./src/server');
 const reset = require('./commands/reset');
-const search = require('./src/search/search');
+const addArtistsToGuild = require('./commands/addArtists').addArtistsToGuild;
+const removeArtistsGuild = require('./commands/removeArtists').removeArtistsGuild;
+const moveArtistsChannel = require('./commands/moveArtist').moveArtistsChannel;
+const setupReleasesChannel = require('./src/setupReleasesChannel');
+
 const prefix = '!SE';
 
 var app = express();
@@ -33,6 +38,7 @@ discordClient.on('ready', () => {
           spotify.spotifyClient.setRefreshToken(data.body['refresh_token']);
 
           console.log(`Spotify connection working...`);
+          dbNewConnection();
         },
         err => {
           console.log('Something went wrong!', err);
@@ -74,8 +80,8 @@ function refreshToken(){
 
 discordClient.on('message', msg => {
     if(msg.content.startsWith(prefix)) {
-      const content = msg.content.replace(prefix, '').trim();
-      const option = content.split(' ')[0].toLowerCase();
+      const content = msg.content.replace(prefix, '').trim().split(' ');
+      const option = content[0].toLowerCase();
       checkReleases.verifyNewReleasesCommandsChannel(msg.channel.id).then(cursor => {
         cursor.hasNext().then( result => {
           if(result){
@@ -87,29 +93,31 @@ discordClient.on('message', msg => {
                 help.showHelpCommands(msg);
                 break;
               case 'artists':
-                seeArtistsGuild(msg, cursor);
+                seeArtists(msg, content, cursor);
                 break;
               case 'new':
-                newReleases(msg, cursor);
+                newReleases(msg, content[content.length - 1], cursor);
                 break;
               case '+':
-                var possibleArtists = content.replace('+', "").split(',').map(item => item.trim());
-                if(possibleArtists.length < 20){
-                  search.searchArtists(possibleArtists, msg).then( artists => {
-                    if(artists !== null){
-                      checkReleases.addArtistsToGuild(artists, cursor, msg);
-                    }
-                  })
-                } else {
-                  msg.channel.send("It is not possible to search more than 20 artists in a single search!");
-                }
+                addArtistsToGuild(msg, content, cursor);
                 break;
               case '-':
-                var possibleArtists = content.replace('-', "").split(',').map(item => item.trim());
-                checkReleases.removeArtistsGuild(possibleArtists, cursor, msg);
+                removeArtistsGuild(msg, content, cursor);
+                break;
+              case 'move':
+                moveArtistsChannel(msg, content, cursor);
                 break;
               default:
                 msg.reply("I don't know what you want to do...")
+                break;
+            }
+          } else {
+            switch(option){
+              case 'addchannel':
+                setupReleasesChannel.addChannel(msg);
+                break;
+              case 'removechannel':
+                setupReleasesChannel.removeChannel(msg);
                 break;
             }
           }
@@ -127,6 +135,10 @@ discordClient.on('guildDelete', guild => {
   if(guild.available){
     server.removeGuild(guild);
   }
+})
+
+discordClient.on('channelDelete', channel => {
+    setupReleasesChannel.channelDelete(channel);
 })
 
 console.log('Listening on 8888');
