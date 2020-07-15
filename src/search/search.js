@@ -1,14 +1,8 @@
 const spotify = require('../../api/spotify-properties').client;
-const discordClient = require('../../api/discord-properties').discordClient;
-
-var info;
-var verifyHandler = false;
-var listener;
 
 var InfoIDs = function(props){
     this.artistId = props.artistId;
     this.artistName = props.artistName;
-    this.messageId = props.messageId;
 }
 
 async function searchArtists(artists, msgDiscord){
@@ -21,8 +15,12 @@ async function searchArtists(artists, msgDiscord){
                 artistIDs.push(id);
             } else {
                 const artist = await searchArtistByName(artists[i], msgDiscord);
-                if(artist !== '' && artist !== null){
-                    artistsInfos.push(artist);
+                if(artist !== ''){
+                    const artistInfo = new InfoIDs({
+                        artistId: artist.id,
+                        artistName: artist.name
+                    })
+                    artistsInfos.push(artistInfo);
                 }
             } 
         }
@@ -74,90 +72,73 @@ function getId(artist){
     
     if(possibleArtists.length !== 0){
         const msgReply = await msgDiscord.reply('Which "_' + artistName + '_" are you looking for? (React with ✅ on the desired artist, ⛔ to cancel the search)');
-        const artistDetails = await buildMessage(possibleArtists, 0);
     
-        const result = await Promise.all([sendMessage(artistDetails, msgDiscord), await chooseArtist(possibleArtists, 0, msgDiscord)])
+        const msg = await sendMessage(msgDiscord, possibleArtists[0])
+        const artistID = await chooseArtist(possibleArtists, 0, msg, msgDiscord.author.id)
     
-        const artistID = result.map(value => value)[1];
-        msgReply.delete();
+        msg.delete();
         if(artistID === ''){
-            msgDiscord.reply('It seems that this *' + artistName + '* does not exist...');
+            msgReply.edit('It seems that this *' + artistName + '* does not exist...');
+            return '';
+        } else {
+            msgReply.delete();
+            return artistID;
         }
-        return artistID;
     } else {
         msgDiscord.reply('It seems that this *' + artistName + '* does not exist...');
         return '';    
     }
 }
 
-async function buildMessage(possibleArtists, number){
-    return new Promise (returnArtistDetails => {
-        if(verifyHandler){
-            discordClient.emit('delete-reaction-add');
-        }
-        verifyHandler = true;
-        const currentArtist = possibleArtists[number];
-        info = new InfoIDs({
-            artistId: currentArtist.id,
-            artistName: currentArtist.name,
-            messageId: ''
-        })
-        var artistDetails = '**' + currentArtist.name + '** (' + currentArtist.external_urls.spotify + ')' + '\nGenres: ';
-        if(currentArtist.genres.length === 0){
-            artistDetails += '*(not specified)*';
-        } else {
-            for(var l = 0; l < currentArtist.genres.length - 1; l++){
-                artistDetails += currentArtist.genres[l] + ', ';
-            }
-            artistDetails += currentArtist.genres[currentArtist.genres.length - 1];
-        }
-        returnArtistDetails(artistDetails)
-    })
+async function sendMessage(msgDiscord, possibleArtist){
+    const artistDetails = buildMessage(possibleArtist);
+    const msg = await msgDiscord.channel.send(artistDetails);
+    await msg.react('✅');
+    await msg.react('❎');
+    await msg.react('⛔');
+    return msg;
 }
 
-async function sendMessage(artistDetails, msgDiscord){
-    const msgReaction = await msgDiscord.channel.send(artistDetails);
-    info.messageId = msgReaction.id;
-    await msgReaction.react('✅');
-    await msgReaction.react('❎');
-    await msgReaction.react('⛔');
+function buildMessage(possibleArtist){
+    var artistDetails = '**' + possibleArtist.name + '** (' + possibleArtist.external_urls.spotify + ')' + '\nGenres: ';
+    if(possibleArtist.genres.length === 0){
+        artistDetails += '*(not specified)*';
+    } else {
+        for(var l = 0; l < possibleArtist.genres.length - 1; l++){
+            artistDetails += possibleArtist.genres[l] + ', ';
+        }
+        artistDetails += possibleArtist.genres[possibleArtist.genres.length - 1];
+    }
+
+    return artistDetails;
 }
 
-async function chooseArtist(possibleArtists, number, msgDiscord){
-    return new Promise ( returnArtistID => {
-        listener = (reaction, user) => {
-            if(reaction.emoji.name === '✅' && info.messageId === reaction.message.id && !user.bot){
-                reaction.message.delete()
-                returnArtistID(info)
-            } else if(reaction.emoji.name === '❎' && info.messageId === reaction.message.id && !user.bot){
-                if(number < possibleArtists.length - 1){
-                    var aux = ++number;
-                    reaction.message.delete().then(() => {
-                        buildMessage(possibleArtists, aux).then( artistDetails => {
-                            sendMessage(artistDetails, msgDiscord).then( () => {
-                                chooseArtist(possibleArtists, aux, msgDiscord).then( result => {
-                                    returnArtistID(result)
-                                })
-                            })
-                        })
-                    })
+async function editMessage(artistsDetails, msg, authorID){
+    Promise.all([msg.edit(artistsDetails), msg.reactions.cache.get('❎').users.remove(authorID)])
+}
+
+async function chooseArtist(possibleArtists, number, msg, authorID){
+    const collectionReaction = await msg.awaitReactions((reaction, user) => (reaction.emoji.name === '✅' || reaction.emoji.name === '❎' || reaction.emoji.name === '⛔') && user.id === authorID, { time: 20000, max: 1 })
+    if(collectionReaction.size !== 0){
+        const reaction = collectionReaction.first();
+        switch(reaction.emoji.name){
+            case '✅':
+                return possibleArtists[number];
+            case '❎':
+                if(possibleArtists.length > number){
+                    const artistDetails = buildMessage(possibleArtists[++number]);
+                    await editMessage(artistDetails, msg, authorID);
+                    return chooseArtist(possibleArtists, number++, msg, authorID);
                 } else {
-                    reaction.message.delete();
-                    returnArtistID('');
+                    return '';
                 }
-            } else if(reaction.emoji.name === '⛔' && info.messageId === reaction.message.id && !user.bot){
-                reaction.message.delete();
-                returnArtistID(null);
-            }
+            case '⛔':
+                return '';
         }
-    
-        discordClient.on('messageReactionAdd', listener);
-    })
+    } else {
+        return '';
+    }
 }
-
-discordClient.addListener('delete-reaction-add', () => {
-    discordClient.removeListener('messageReactionAdd', listener)
-})
 
 exports.searchArtists = searchArtists;
 exports.getId = getId;
