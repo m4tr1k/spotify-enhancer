@@ -10,16 +10,16 @@ async function newReleases(msgDiscord, releasesChannel, cursor){
     
     if(guild.idReleasesChannels.includes(idChannel)){
         //TODO melhorar esta linha
-        const possibleArtists = msgDiscord.content.replace(releasesChannel, "").replace('$SE new', "").split(',').map(item => item.trim());
+        const possibleArtists = msgDiscord.content.replace(releasesChannel, "").replace('!SE new', "").split(',').map(item => item.trim());
 
         for(let i = 0; i < possibleArtists.length; i++){
             if(possibleArtists[i].startsWith("spotify:artist:") || possibleArtists[i].startsWith("https://open.spotify.com/artist/")){
                 const id = search.getId(possibleArtists[i]);
                 artistIDs.push(id);
             } else {
-                const artistInfo = await search.searchArtistByName(possibleArtists[i], msgDiscord);
-                if(artistInfo !== '' && artistInfo !== null){
-                    artistIDs.push(artistInfo.artistId);
+                const artist = await search.searchArtistByName(possibleArtists[i], msgDiscord);
+                if(artist !== ''){
+                    artistIDs.push(artist.id);
                 }
             }
         }
