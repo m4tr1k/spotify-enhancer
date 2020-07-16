@@ -96,7 +96,7 @@ discordClient.on('message', msg => {
                 seeArtists(msg, content, cursor);
                 break;
               case 'new':
-                newReleases(msg, content[content.length - 1], cursor);
+                newReleases(msg, content, cursor);
                 break;
               case '+':
                 addArtistsToGuild(msg, content, cursor);
