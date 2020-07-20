@@ -4,15 +4,9 @@ const auth = require('../auth.json');
 class SpotifyClient{
     constructor(){
         this.spotifyClient = new Spotify({
-            redirectUri: auth.redirectUri,
             clientId: auth.clientId,
             clientSecret: auth.clientSecret
         });
-    }
-
-    getAuthorizeURL(){
-        const scopes = ['user-read-private', 'user-read-email'];
-        return this.spotifyClient.createAuthorizeURL(scopes, auth.state);
     }
 
     getAuthOptions(){
