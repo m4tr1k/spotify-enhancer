@@ -34,7 +34,7 @@ async function refreshToken(){
     try{
         const data = await spotify.spotifyClient.clientCredentialsGrant();
         spotify.spotifyClient.setAccessToken(data.body['access_token']);
-        console.log('Refreshed token! Expires in ' + data.body.expires_in + 'seconds');
+        console.log('Refreshed token! Expires in ' + data.body.expires_in + ' seconds');
     } catch (err){
         console.log('Could not refresh access token', err);
     }
@@ -54,7 +54,6 @@ function setupCheckNewReleases(){
         console.log(timeUntilCheck);
         setTimeout(() => {sendNewReleases(), setInterval(() => sendNewReleases(), 3600000)}, timeUntilCheck);
     }
-    setInterval(refreshToken, 3600000);
 }
 
 module.exports = startup;
