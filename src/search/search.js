@@ -27,7 +27,7 @@ async function searchArtists(artists, msgDiscord){
     }
 
     if(artistIDs.length != 0){
-        const artistDetails = await spotify.spotifyClient.getArtists(artistIDs);
+        const artistDetails = await spotify.client.getArtists(artistIDs);
 
         for(let i = 0; i < artistDetails.body.artists.length; i++){
             if(artistDetails.body.artists[i] != null){
@@ -66,7 +66,7 @@ function getId(artist){
 }
 
  async function searchArtistByName(artistName, msgDiscord){
-    const search = await spotify.spotifyClient.searchArtists(artistName, { limit : 20, offset : 0 });
+    const search = await spotify.client.searchArtists(artistName, { limit : 20, offset : 0 });
     
     const possibleArtists = search.body.artists.items;
     

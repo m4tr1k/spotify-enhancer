@@ -226,7 +226,7 @@ async function getLatestAlbumObjects(artistId){
     let latestReleases = [];
     let dataAlbums;
     try{
-        dataAlbums = await spotify.spotifyClient.getArtistAlbums(artistId, {offset: 0, include_groups: 'album,single'})
+        dataAlbums = await spotify.client.getArtistAlbums(artistId, {offset: 0, include_groups: 'album,single'})
     } catch (err){
         await sleep(err.headers['retry-after'] * 1000);
         return;

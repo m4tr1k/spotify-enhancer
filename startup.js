@@ -1,14 +1,14 @@
-const spotify = require('./api/spotify-properties').client;
+const spotify = require('./api/spotify-properties');
 const dbNewConnection = require('./api/mongoDB-funcs').newConnection;
 const auth = require('./auth.json');
-const discordClient = require('./api/discord-properties').discordClient;
+const discordClient = require('./api/discord-properties');
 const sendNewReleases = require('./src/checkReleases').sendNewReleases;
 
 async function startup(){
     try{
         //Connection to Spotify API
-        const data = await spotify.spotifyClient.clientCredentialsGrant()
-        spotify.spotifyClient.setAccessToken(data.body['access_token'])
+        const data = await spotify.client.clientCredentialsGrant()
+        spotify.client.setAccessToken(data.body['access_token'])
         console.log(`Spotify connection established!`)
 
         //Refresh token after 1 hour
@@ -32,8 +32,8 @@ async function startup(){
 
 async function refreshToken(){
     try{
-        const data = await spotify.spotifyClient.clientCredentialsGrant();
-        spotify.spotifyClient.setAccessToken(data.body['access_token']);
+        const data = await spotify.client.clientCredentialsGrant();
+        spotify.client.setAccessToken(data.body['access_token']);
         console.log('Refreshed token! Expires in ' + data.body.expires_in + ' seconds');
     } catch (err){
         console.log('Could not refresh access token', err);
