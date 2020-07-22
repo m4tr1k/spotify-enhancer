@@ -1,4 +1,4 @@
-const spotify = require('../../api/spotify-properties').client;
+const spotify = require('../../api/spotify-properties');
 
 var InfoIDs = function(props){
     this.artistId = props.artistId;

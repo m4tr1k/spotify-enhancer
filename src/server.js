@@ -1,4 +1,4 @@
-const discordClient = require('../api/discord-properties').discordClient
+const discordClient = require('../api/discord-properties')
 const db = require('../api/mongoDB-funcs');
 
 async function welcome(guild){

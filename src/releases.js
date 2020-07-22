@@ -1,7 +1,7 @@
 const axios = require('axios');
 const Discord = require('discord.js');
-const discordClient = require('../api/discord-properties').discordClient;
-const spotify = require('../api/spotify-properties').client;
+const discordClient = require('../api/discord-properties');
+const spotify = require('../api/spotify-properties');
 const db = require('../api/mongoDB-funcs');
 
 var Album = function(props){
