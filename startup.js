@@ -1,6 +1,6 @@
 const spotify = require('./api/spotify-properties');
 const dbNewConnection = require('./api/mongoDB-funcs').newConnection;
-const auth = require('./auth.json');
+const {discordToken, prefix} = require('./config.json');
 const discordClient = require('./api/discord-properties');
 const sendNewReleases = require('./src/checkReleases').sendNewReleases;
 
@@ -18,7 +18,7 @@ async function startup(){
         await dbNewConnection()
 
         //Login on Discord API
-        discordClient.login(auth.token);
+        discordClient.login(discordToken);
         console.log('Bot is online!')
 
         //Setup the timeouts and intervals for new releases

@@ -1,5 +1,5 @@
 const Spotify = require('spotify-web-api-node');
-const {clientId, clientSecret} = require('../auth.json');
+const {clientId, clientSecret} = require('../config.json');
 
 class SpotifyClient{
     constructor(){
