@@ -4,14 +4,14 @@ const tmp = require('tmp');
 
 function seeArtists(msgDiscord, content, cursor){
     switch(content.length){
-        case 1:
+        case 0:
             seeArtistsGuild(msgDiscord, cursor)
             break
-        case 2:
-            seeArtistsChannel(msgDiscord, content[1], cursor)
+        case 1:
+            seeArtistsChannel(msgDiscord, content[0], cursor)
             break
         default:
-            msgDiscord.channel.send('The command has not the correct structure!')
+            msgDiscord.channel.send('The command has not the correct structure! (type `!SE help` for more details)')
             break
     }
 }
@@ -53,4 +53,16 @@ async function sendRegisteredArtists(artists, msgDiscord){
     file.removeCallback();
 }
 
-exports.seeArtists = seeArtists;
+module.exports = {
+    name: 'artists',
+    title: 'See Artists',
+    releasesCommand: true,
+    description: 'See the artists registered in the server or in a particular channel',
+    usage: [
+        '`!SE artists`\nAll artists registered on the server',
+        '`!SE artists #name-channel`\nAll artists on a particular channel'
+    ],
+    execute(msgDiscord, content, cursor){
+        seeArtists(msgDiscord, content, cursor)
+    }
+}

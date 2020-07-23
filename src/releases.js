@@ -1,7 +1,7 @@
 const axios = require('axios');
 const Discord = require('discord.js');
-const discordClient = require('../api/discord-properties').discordClient;
-const spotify = require('../api/spotify-properties').client;
+const discordClient = require('../api/discord-properties');
+const spotify = require('../api/spotify-properties');
 const db = require('../api/mongoDB-funcs');
 
 var Album = function(props){
@@ -226,7 +226,7 @@ async function getLatestAlbumObjects(artistId){
     let latestReleases = [];
     let dataAlbums;
     try{
-        dataAlbums = await spotify.spotifyClient.getArtistAlbums(artistId, {offset: 0, include_groups: 'album,single'})
+        dataAlbums = await spotify.client.getArtistAlbums(artistId, {offset: 0, include_groups: 'album,single'})
     } catch (err){
         await sleep(err.headers['retry-after'] * 1000);
         return;

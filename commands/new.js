@@ -3,22 +3,31 @@ const releases = require('../src/releases');
 const getArtistDB = require('../api/mongoDB-funcs').getArtist;
 
 async function newReleases(msgDiscord, content, cursor){
-    const guild = await cursor.next()
-    switch(guild.idReleasesChannels.length){
-        case 0:
-            msgDiscord.channel.send("You don't have registered releases channels!");
-            break
-        case 1:
-            newReleasesUniqueGuildChannel(msgDiscord, content, guild.idReleasesChannels[0]);
-            break
-        default:
-            newReleasesGuildChannel(msgDiscord, content, guild.idReleasesChannels);
-            break
+    const isReleasesCommandsChannel = await cursor.hasNext();
+    if(isReleasesCommandsChannel){
+        if(content.length != 0){
+            const guild = await cursor.next()
+            switch(guild.idReleasesChannels.length){
+                case 0:
+                    msgDiscord.channel.send("You don't have registered releases channels!");
+                    break
+                case 1:
+                    newReleasesUniqueGuildChannel(msgDiscord, content, guild.idReleasesChannels[0]);
+                    break
+                default:
+                    newReleasesGuildChannel(msgDiscord, content, guild.idReleasesChannels);
+                    break
+            }
+        } else {
+            msgDiscord.reply('This command needs arguments (type `!SE help` for more details)');
+        }
+    } else {
+        msgDiscord.reply('You cannot execute this command here!');
     }
 }
 
 async function newReleasesUniqueGuildChannel(msgDiscord, content, idReleasesChannel){
-    const possibleArtists = content.join(' ').replace('new', "").split(',').map(item => item.trim());
+    const possibleArtists = content.join(' ').split(',').map(item => item.trim());
     printNewReleases(msgDiscord, possibleArtists, idReleasesChannel)
 }
 
@@ -27,7 +36,7 @@ async function newReleasesGuildChannel(msgDiscord, content, releasesChannels){
     const idReleasesChannel = releasesChannel.substring(2, releasesChannel.length - 1);
     
     if(releasesChannels.includes(idReleasesChannel)){
-        const possibleArtists = content.join(' ').replace(releasesChannel, "").replace('new', "").split(',').map(item => item.trim());
+        const possibleArtists = content.join(' ').replace(releasesChannel, "").split(',').map(item => item.trim());
         printNewReleases(msgDiscord, possibleArtists, idReleasesChannel)
     } else {
         msgDiscord.channel.send("You did not mention a correct channel or that channel is not a registered releases channel...");
@@ -73,4 +82,17 @@ async function printNewReleases(msgDiscord, possibleArtists, releasesChannel){
     }
 }
 
-exports.newReleases = newReleases;
+module.exports = {
+    name: 'new',
+    title: 'New Releases of Artist(s)',
+    releasesCommand: true,
+    description: 'Print the latest releases of any artist to a specific releases channel.\nIt is possible to add several artists using a comma `,`',
+    note: '- You need to have registered releases channels in order to add artists to the server!',
+    usage: [
+        '`!SE new name_artist/SpotifyURI/URL, (...)`\nCommand for one releases channel',
+        '`!SE new name_artist/SpotifyURI/URL, (...) #name-channel`\nCommand for more than one releases channel'
+    ],
+    execute(msgDiscord, content, cursor){
+        newReleases(msgDiscord, content, cursor)
+    }
+}
