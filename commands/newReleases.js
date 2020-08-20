@@ -44,6 +44,7 @@ async function newReleasesGuildChannel(msgDiscord, content, releasesChannels){
 }
 
 async function printNewReleases(msgDiscord, possibleArtists, releasesChannel){
+    let printedReleases = false;
     let artistIDs = [];
 
     for(let i = 0; i < possibleArtists.length; i++){
@@ -69,16 +70,24 @@ async function printNewReleases(msgDiscord, possibleArtists, releasesChannel){
 
             if(artistExists){
                 const artist = await cursorArtist.next();
-                releases.createEmbeds(artist.latestReleases, idReleasesChannel);
+                if(artist.latestReleases.length !== 0){
+                    releases.createEmbeds(artist.latestReleases, idReleasesChannel);
+                    printedReleases = true;
+                }
             } else {
                 const latestReleases = await releases.getLatestReleases(artistIDs[i]);
                 if(latestReleases != '' && latestReleases.length != 0){
                     releases.createEmbeds(latestReleases, idReleasesChannel);
+                    printedReleases = true;
                 }
             }
         }
 
-        msgDiscord.channel.send("Latest releases of the selected artists printed!");
+        if(printedReleases){
+            msgDiscord.channel.send("Latest releases of the selected artists printed!");
+        } else {
+            msgDiscord.channel.send("It was not possible to print the latest releases of the selected artists!");
+        }
     }
 }
 
