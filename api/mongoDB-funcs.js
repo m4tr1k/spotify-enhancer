@@ -80,7 +80,8 @@ async function insertArtistsDB(artists, idReleasesChannel, msgDiscord){
                 newArtists = true;
             }
         } else {
-            const latestReleases = await releases.getLatestReleases(artists[i].artistId);
+            let latestReleases;
+            latestReleases = await releases.getLatestReleases(artists[i].artistId);
             if(latestReleases !== ''){
                 const currentDate = new Date();
                 const releaseDate = new Date(latestReleases[0].releaseDate);
@@ -91,23 +92,26 @@ async function insertArtistsDB(artists, idReleasesChannel, msgDiscord){
                     idGuildChannel.push(idReleasesChannel);
                     releases.createEmbeds(latestReleases, idGuildChannel);
                 }
-    
-                await client.collection('artist').insertOne({
-                    _id: artists[i].artistId,
-                    nameArtist: artists[i].artistName,
-                    nameArtist_lowerCase: artists[i].artistName.toLowerCase(),
-                    latestReleases: latestReleases,
-                    idGuildChannels: [
-                        idReleasesChannel
-                    ]
-                })
-                if(artistsAddedDB === '**'){
-                    artistsAddedDB += artists[i].artistName;
-                } else {
-                    artistsAddedDB += ', ' + artists[i].artistName;
-                }
-                newArtists = true;
+            } else {
+                latestReleases = new Array();
             }
+
+            await client.collection('artist').insertOne({
+                _id: artists[i].artistId,
+                nameArtist: artists[i].artistName,
+                nameArtist_lowerCase: artists[i].artistName.toLowerCase(),
+                latestReleases: latestReleases,
+                idGuildChannels: [
+                    idReleasesChannel
+                ]
+            })
+
+            if(artistsAddedDB === '**'){
+                artistsAddedDB += artists[i].artistName;
+            } else {
+                artistsAddedDB += ', ' + artists[i].artistName;
+            }
+            newArtists = true;
         }           
     }
 
