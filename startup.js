@@ -1,11 +1,11 @@
 const fs = require('fs');
 const spotify = require('./api/spotify-properties');
 const dbNewConnection = require('./api/mongoDB-funcs').newConnection;
+const getGuildsInfo = require('./api/mongoDB-funcs').getGuildsInfo;
 const {discordToken, prefix} = require('./config.json');
 const discordClient = require('./api/discord-properties');
 const sendNewReleases = require('./src/checkReleases').sendNewReleases;
 
-const checkReleases = require('./src/checkReleases');
 const server = require('./src/server');
 const setupReleasesChannel = require('./src/setupReleasesChannel');
 
@@ -25,6 +25,10 @@ async function startup(){
         //Load all the available commands
         loadAllCommands()
         console.log('All the commands were successfully loaded!')
+
+        //Load all the info about the guilds
+        await loadAllInfoGuilds();
+        console.log('All info about registered guilds successfully loaded!')
 
         //Login on Discord API
         discordClient.login(discordToken);
@@ -58,6 +62,17 @@ function loadAllCommands(){
     }
 }
 
+async function loadAllInfoGuilds(){
+    const guildsInfoCursor = getGuildsInfo();
+    let guildInfo = await guildsInfoCursor.next();
+
+    while(guildInfo !== null){
+        discordClient.releasesChannels.set(guildInfo._id, guildInfo.idReleasesChannels);
+        discordClient.releasesCommandsChannels.set(guildInfo._id, guildInfo.idReleasesCommandsChannel);
+        guildInfo = await guildsInfoCursor.next();
+    }
+}
+
 function setupCheckNewReleases(){
     let localTime = new Date();
     if(localTime.getMinutes() === 0){
@@ -69,7 +84,6 @@ function setupCheckNewReleases(){
         localTime.setSeconds(0);
         localTime.setMilliseconds(0);
         const timeUntilCheck = localTime - new Date();
-        console.log(timeUntilCheck);
         setTimeout(() => {sendNewReleases(), setInterval(() => sendNewReleases(), 3600000)}, timeUntilCheck);
     }
 }
@@ -84,9 +98,7 @@ discordClient.on('message', msg => {
         const option = content.shift().toLowerCase();
 
         if(discordClient.commands.has(option)){
-            checkReleases.verifyNewReleasesCommandsChannel(msg.channel.id).then(cursor => {
-                discordClient.commands.get(option).execute(msg, content, cursor); 
-            })
+            discordClient.commands.get(option).execute(msg, content);
         } else {
             msg.reply("I don't know what you want to do...");
         }

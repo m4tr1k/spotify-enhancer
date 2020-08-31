@@ -6,14 +6,12 @@ async function newConnection(){
     await mongoose.connect('mongodb://localhost:27017/spotify-enhancer', {useNewUrlParser: true, useUnifiedTopology: true});
 }
 
-async function checkConnection(){
-    if(client.readyState === 0){
-        await newConnection();
-    }
+function getGuildsInfo(){
+    const cursor = client.db.collection('guild').find();
+    return cursor;
 }
 
 async function findChannel(idChannel){
-    await checkConnection();
     const cursor = client.db.collection('guild').find({
         idReleasesCommandsChannel: idChannel
     });
@@ -173,7 +171,6 @@ async function getListArtists(cursor){
 }
 
 async function getAllArtists(){
-    await checkConnection();
     const cursor = client.db.collection('artist').find({
         idGuildChannels: { $exists: true, $ne: [] }
     })
@@ -181,7 +178,6 @@ async function getAllArtists(){
 }
 
 async function getIdGuildsArtist(artistName){
-    await checkConnection();
     const cursor = await client.db.collection('artist').find({
         nameArtist: artistName
     }).toArray();
@@ -299,6 +295,7 @@ async function moveArtistsChannel(artistName, idFutureReleaseChannel, idReleases
 }
 
 exports.newConnection = newConnection
+exports.getGuildsInfo = getGuildsInfo
 exports.insertGuildDB = insertGuildDB
 exports.removeGuildDB = removeGuildDB
 exports.insertArtistsDB = insertArtistsDB

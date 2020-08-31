@@ -1,5 +1,5 @@
 const axios = require('axios');
-const Discord = require('discord.js');
+const {MessageEmbed} = require('discord.js');
 const discordClient = require('../api/discord-properties');
 const spotify = require('../api/spotify-properties');
 const db = require('../api/mongoDB-funcs');
@@ -49,7 +49,7 @@ function createEmbedAlbum(album, idGuildChannels){
 }
 
 function createEmbed(title, description, urlImage){
-    return new Discord.MessageEmbed()
+    return new MessageEmbed()
         .setColor('#1DB954')
         .setTitle(title)
         .setDescription(description)
