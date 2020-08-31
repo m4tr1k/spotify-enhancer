@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
 const client = mongoose.connection;
+const {dbURL} = require('../config.json');
 const releases = require('../src/releases');
 
 async function newConnection(){
-    await mongoose.connect('mongodb://localhost:27017/spotify-enhancer', {useNewUrlParser: true, useUnifiedTopology: true});
+    await mongoose.connect(dbURL, {useNewUrlParser: true, useUnifiedTopology: true});
 }
 
 function getGuildsInfo(){
