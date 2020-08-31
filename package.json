@@ -18,10 +18,9 @@
   },
   "homepage": "https://github.com/m4tr1k/spotify-enhancer#readme",
   "dependencies": {
-    "axios": "^0.19.2",
-    "discord.js": "^12.0.2",
-    "express": "^4.17.1",
-    "mongoose": "^5.9.21",
+    "axios": "^0.20.0",
+    "discord.js": "^12.3.1",
+    "mongoose": "^5.10.2",
     "nodemon": "^2.0.4",
     "spotify-web-api-node": "^4.0.0",
     "tmp": "^0.2.1"
