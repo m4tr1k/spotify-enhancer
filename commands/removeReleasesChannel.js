@@ -1,7 +1,9 @@
 const removeChannel = require('../src/setupReleasesChannel').removeChannel;
+const {releasesCommandsChannels} = require('../api/discord-properties');
 
-async function removeReleasesChannel(msgDiscord, content, cursor){
-    const isReleasesCommandsChannel = await cursor.hasNext();
+async function removeReleasesChannel(msgDiscord, content){
+    const isReleasesCommandsChannel = releasesCommandsChannels.some(releasesCommandsChannel => releasesCommandsChannel === msgDiscord.channel.id);
+
     if(!isReleasesCommandsChannel){
         if(content.length == 0){
             removeChannel(msgDiscord);
@@ -20,7 +22,7 @@ module.exports = {
     description: 'Remove a releases channel from the server',
     note: 'You must have the New Releases Manager role assigned in order to remove channels.',
     usage: ['`!SE removechannel`'],
-    execute(msgDiscord, content, cursor){
-        removeReleasesChannel(msgDiscord, content, cursor)
+    execute(msgDiscord, content){
+        removeReleasesChannel(msgDiscord, content)
     }
 }

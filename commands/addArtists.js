@@ -1,20 +1,22 @@
 const checkReleases = require('../src/checkReleases');
 const search = require('../src/search/search');
+const {releasesCommandsChannels, releasesChannels} = require('../api/discord-properties');
 
-async function addArtistsToGuild(msgDiscord, content, cursor){
-    const isReleasesCommandsChannel = await cursor.hasNext();
+async function addArtistsToGuild(msgDiscord, content){
+    const isReleasesCommandsChannel = releasesCommandsChannels.some(releasesCommandsChannel => releasesCommandsChannel === msgDiscord.channel.id);
+
     if(isReleasesCommandsChannel){
         if(content.length != 0){
-            const guild = await cursor.next();
-            switch(guild.idReleasesChannels.length){
+            const idReleasesChannels = releasesChannels.get(msgDiscord.guild.id);
+            switch(idReleasesChannels.length){
                 case 0:
                     msgDiscord.channel.send("You don't have registered releases channels!");
                     break
                 case 1:
-                    addArtistsToGuildUniqueChannel(msgDiscord, content, guild.idReleasesChannels[0])
+                    addArtistsToGuildUniqueChannel(msgDiscord, content, idReleasesChannels[0])
                     break
                 default:
-                    addArtistsToGuildChannel(msgDiscord, content, guild.idReleasesChannels)
+                    addArtistsToGuildChannel(msgDiscord, content, idReleasesChannels)
                     break
             }
         } else {
@@ -64,7 +66,7 @@ module.exports = {
         '`!SE+ name_artist/SpotifyURI/URL, (...)`\nCommand for only one releases channel',
         '`!SE+ name_artist/SpotifyURI/URL, (...) #name-channel`\nCommand for more than one releases channel'
     ],
-    execute(msgDiscord, content, cursor){
-        addArtistsToGuild(msgDiscord, content, cursor);
+    execute(msgDiscord, content){
+        addArtistsToGuild(msgDiscord, content);
     }
 }

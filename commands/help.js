@@ -1,41 +1,40 @@
-const MessageEmbed = require('discord.js').MessageEmbed;
-const discordClient = require('../api/discord-properties')
+const {MessageEmbed} = require('discord.js');
+const {commands, releasesCommandsChannels} = require('../api/discord-properties')
 
-function showHelpCommands(msgDiscord, content, cursor){
+function showHelpCommands(msgDiscord, content){
     switch(content.length){
         case 0:
-            showDefaultHelpCommand(msgDiscord, cursor)
+            showDefaultHelpCommand(msgDiscord)
             break;
         case 1:
-            showSpecificHelpCommand(msgDiscord, content[0], cursor)
+            showSpecificHelpCommand(msgDiscord, content[0])
             break;
         default:
             msgDiscord.reply('I can only show help for one command!')
     }
 }
 
-async function showDefaultHelpCommand(msgDiscord, cursor){
+async function showDefaultHelpCommand(msgDiscord){
     let helpMessage = new MessageEmbed()
                         .setColor('#1DB954')
                         .setTitle('Need some help?')
                         .setDescription("Explore any available command with the following instructions:");
-    
-    const isReleasesCommandsChannel = await cursor.hasNext();
-
-    const commands = discordClient.commands.filter(command => command.releasesCommand === isReleasesCommandsChannel || command.releasesCommand === null);
 
     let helpCommands = [];
 
-    commands.each(command => helpCommands.push({name: command.title, value: '`!SE help ' + command.name + '`', inline: true}));
+    const isReleasesCommandsChannel = releasesCommandsChannels.some(releasesCommandsChannel => releasesCommandsChannel === msgDiscord.channel.id);
+
+    commands.filter(command => command.releasesCommand === isReleasesCommandsChannel || command.releasesCommand === null)
+            .each(command => helpCommands.push({name: command.title, value: '`!SE help ' + command.name + '`', inline: true}));
 
     helpMessage.addFields(helpCommands);
     msgDiscord.channel.send(helpMessage);
 }
 
-async function showSpecificHelpCommand(msgDiscord, desiredCommand, cursor){
-    const isReleasesCommandsChannel = await cursor.hasNext();
+async function showSpecificHelpCommand(msgDiscord, desiredCommand){
+    const isReleasesCommandsChannel = releasesCommandsChannels.some(releasesCommandsChannel => releasesCommandsChannel === msgDiscord.channel.id);
 
-    const selectedCommand = discordClient.commands.find(command => command.releasesCommand === isReleasesCommandsChannel && command.name === desiredCommand.toLowerCase());
+    const selectedCommand = commands.find(command => (command.releasesCommand === isReleasesCommandsChannel || command.releasesCommand === null) && command.name === desiredCommand.toLowerCase());
 
     if(selectedCommand !== undefined){
         let helpMessage = new MessageEmbed()
@@ -55,7 +54,7 @@ async function showSpecificHelpCommand(msgDiscord, desiredCommand, cursor){
 
 module.exports = {
     name: 'help',
-    execute(msgDiscord, content, cursor){
-        showHelpCommands(msgDiscord, content, cursor)
+    execute(msgDiscord, content){
+        showHelpCommands(msgDiscord, content)
     }
 }

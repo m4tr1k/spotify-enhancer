@@ -1,21 +1,22 @@
 const search = require('../src/search/search');
 const releases = require('../src/releases');
 const getArtistDB = require('../api/mongoDB-funcs').getArtist;
+const {releasesCommandsChannels, releasesChannels} = require('../api/discord-properties');
 
-async function newReleases(msgDiscord, content, cursor){
-    const isReleasesCommandsChannel = await cursor.hasNext();
+async function newReleases(msgDiscord, content){
+    const isReleasesCommandsChannel = releasesCommandsChannels.some(releasesCommandsChannel => releasesCommandsChannel === msgDiscord.channel.id);
     if(isReleasesCommandsChannel){
         if(content.length != 0){
-            const guild = await cursor.next()
-            switch(guild.idReleasesChannels.length){
+            const idReleasesChannels = releasesChannels.get(msgDiscord.guild.id);
+            switch(idReleasesChannels.length){
                 case 0:
                     msgDiscord.channel.send("You don't have registered releases channels!");
                     break
                 case 1:
-                    newReleasesUniqueGuildChannel(msgDiscord, content, guild.idReleasesChannels[0]);
+                    newReleasesUniqueGuildChannel(msgDiscord, content, idReleasesChannels[0]);
                     break
                 default:
-                    newReleasesGuildChannel(msgDiscord, content, guild.idReleasesChannels);
+                    newReleasesGuildChannel(msgDiscord, content, idReleasesChannels);
                     break
             }
         } else {
@@ -101,7 +102,7 @@ module.exports = {
         '`!SE new name_artist/SpotifyURI/URL, (...)`\nCommand for one releases channel',
         '`!SE new name_artist/SpotifyURI/URL, (...) #name-channel`\nCommand for more than one releases channel'
     ],
-    execute(msgDiscord, content, cursor){
-        newReleases(msgDiscord, content, cursor)
+    execute(msgDiscord, content){
+        newReleases(msgDiscord, content)
     }
 }

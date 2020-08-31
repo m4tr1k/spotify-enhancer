@@ -1,11 +1,14 @@
 const removeArtists = require('../src/checkReleases').removeArtistsGuild;
+const {releasesCommandsChannels, releasesChannels} = require('../api/discord-properties');
 
-async function removeArtistsGuild(msgDiscord, content, cursor){
-    const isReleasesCommandsChannel = await cursor.hasNext();
+async function removeArtistsGuild(msgDiscord, content){
+    const isReleasesCommandsChannel = releasesCommandsChannels.some(releasesCommandsChannel => releasesCommandsChannel === msgDiscord.channel.id);
+
     if(isReleasesCommandsChannel){
         if(content.length != 0){
             const possibleArtists = content.join(' ').split(',').map(item => item.trim());
-            removeArtists(possibleArtists, cursor, msgDiscord);
+            const idReleasesChannels = releasesChannels.get(msgDiscord.guild.id);
+            removeArtists(possibleArtists, idReleasesChannels, msgDiscord);
         } else {
             msgDiscord.reply('This command needs arguments (type `!SE help` for more details)');
         }
@@ -19,8 +22,8 @@ module.exports = {
     title: 'Remove Artist(s)',
     releasesCommand: true,
     description: 'Remove an artist that is registered in the server.\nIt is possible to remove several artists using a comma `,`',
-    usage: ['`!SE- name_artist/SpotifyURI/URL, (...)`'],
-    execute(msgDiscord, content, cursor){
-        removeArtistsGuild(msgDiscord, content, cursor);
+    usage: ['`!SE- name_artist, (...)`'],
+    execute(msgDiscord, content){
+        removeArtistsGuild(msgDiscord, content);
     }
 }

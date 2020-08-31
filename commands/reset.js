@@ -1,11 +1,13 @@
-const mongoDB = require('../api/mongoDB-funcs')
+const deleteAllArtists = require('../api/mongoDB-funcs').deleteAllArtists
+const {releasesCommandsChannels} = require('../api/discord-properties')
 
-async function resetDB(msgDiscord, content, cursor){
-    const isReleasesCommandsChannel = await cursor.hasNext();
+async function resetDB(msgDiscord, content){
+    const isReleasesCommandsChannel = releasesCommandsChannels.some(releasesCommandsChannel => releasesCommandsChannel === msgDiscord.channel.id);
+
     if(isReleasesCommandsChannel){
         if(content.length != 0){
             if(msgDiscord.author.id == msgDiscord.guild.ownerID){
-                await mongoDB.deleteAllArtists(msgDiscord.guild.id);
+                await deleteAllArtists(msgDiscord.guild.id);
                 msgDiscord.channel.send("Database reset successfully done!");
             } else {
                 msgDiscord.channel.send("You're not allowed to reset the database!");
@@ -25,7 +27,7 @@ module.exports = {
     description: 'Deletes all the artists registered in the server.\nThis command cannot be undone!',
     note: '- Only the server owner can execute this command!',
     usage: ['`!SE reset`'],
-    execute(msgDiscord, content, cursor){
-        resetDB(msgDiscord, content, cursor);
+    execute(msgDiscord, content){
+        resetDB(msgDiscord, content);
     }
 }
