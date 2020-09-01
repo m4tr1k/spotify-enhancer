@@ -1,0 +1,9 @@
+{
+    "prefix": "!SE",
+    "discordToken": "YOUR_DISCORD_BOT_TOKEN",
+
+    "dbURL": "YOUR_MONGODB_LINK",
+
+    "clientId": "YOUR_SPOTIFY_APP_CLIENT_ID",
+    "clientSecret": "YOUR_SPOTIFY_APP_CLIENT_SECRET"
+}
