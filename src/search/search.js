@@ -77,12 +77,17 @@ function getId(artist){
         const artistID = await chooseArtist(possibleArtists, 0, msg, msgDiscord.author.id)
     
         msg.delete();
-        if(artistID === ''){
-            msgReply.edit('It seems that this *' + artistName + '* does not exist...');
-            return '';
-        } else {
-            msgReply.delete();
-            return artistID;
+
+        switch(artistID){
+            case undefined:
+                msgReply.edit('It seems that this *' + artistName + '* does not exist...');
+                return '';
+            case null:
+                msgReply.delete();
+                return '';
+            default: 
+                msgReply.delete();
+                return artistID;
         }
     } else {
         msgDiscord.reply('It seems that this *' + artistName + '* does not exist...');
@@ -125,15 +130,15 @@ async function chooseArtist(possibleArtists, number, msg, authorID){
             case '✅':
                 return possibleArtists[number];
             case '❎':
-                if(possibleArtists.length > number){
+                if(possibleArtists.length > number + 1){
                     const artistDetails = buildMessage(possibleArtists[++number]);
                     await editMessage(artistDetails, msg, authorID);
                     return chooseArtist(possibleArtists, number++, msg, authorID);
                 } else {
-                    return '';
+                    return undefined;
                 }
             case '⛔':
-                return '';
+                return null;
         }
     } else {
         return '';
