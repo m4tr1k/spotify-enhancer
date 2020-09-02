@@ -35,6 +35,24 @@ async function removeGuildDB(idServer){
     })
 }
 
+async function removeGuildsDB(guilds){
+    let idReleasesChannels = [].concat(...guilds.map(guild => guild.idReleasesChannels));
+    console.log(idReleasesChannels);
+
+    if(idReleasesChannels.length > 0){
+        await client.db.collection('artist').updateMany(
+            {idGuildChannels: {$in: idReleasesChannels}},
+            {$pull : {idGuildChannels: {$in: idReleasesChannels}}}
+        )
+    }
+
+    let idGuilds = guilds.map(guild => guild._id);
+
+    client.db.collection('guild').deleteMany({
+        _id: {$in: idGuilds}
+    })
+}
+
 async function getReleasesChannels(idServer){
     const server = await client.db.collection('guild').findOne({
         _id: idServer
@@ -299,6 +317,7 @@ exports.newConnection = newConnection
 exports.getGuildsInfo = getGuildsInfo
 exports.insertGuildDB = insertGuildDB
 exports.removeGuildDB = removeGuildDB
+exports.removeGuildsDB = removeGuildsDB
 exports.insertArtistsDB = insertArtistsDB
 exports.findChannel = findChannel
 exports.client = client

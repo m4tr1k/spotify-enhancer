@@ -1,2 +1,2 @@
-const startup = require('./startup');
+const startup = require('./startup/startup');
 startup();
