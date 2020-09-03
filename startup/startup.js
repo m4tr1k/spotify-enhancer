@@ -4,9 +4,8 @@ const {discordToken} = require('../config.json');
 const discordClient = require('../api/discord-properties');
 
 const dbNewConnection = require('../api/mongoDB-funcs').newConnection;
-const getGuildsInfo = require('../api/mongoDB-funcs').getGuildsInfo;
 const sendNewReleases = require('../src/checkReleases').sendNewReleases;
-const removeGuilds = require('../api/mongoDB-funcs').removeGuildsDB;
+const loadGuildsInfo = require('./guildsInfo');
 
 async function startup(){
     try{
@@ -58,33 +57,6 @@ function loadAllCommands(){
     }
 }
 
-async function loadAllInfoGuilds(){
-    const guildsInfoCursor = getGuildsInfo();
-
-    let guildInfo = await guildsInfoCursor.next();
-    if(guildInfo !== null){
-        let unregisteredGuilds = [];
-        while(guildInfo !== null){
-            const guild = discordClient.guilds.cache.get(guildInfo._id);
-
-            if(guild === undefined){
-                unregisteredGuilds.push(guildInfo);
-            } else {
-                discordClient.releasesChannels.set(guildInfo._id, guildInfo.idReleasesChannels);
-                discordClient.releasesCommandsChannels.set(guildInfo._id, guildInfo.idReleasesCommandsChannel);
-            }
-
-            guildInfo = await guildsInfoCursor.next();
-        }
-
-        if(unregisteredGuilds.length > 0){
-            console.log('The bot was kicked/banned from ' + unregisteredGuilds.length + ' guilds while it was offline :(');
-            await removeGuilds(unregisteredGuilds);
-            console.log('All the info regarding those guilds was deleted')
-        }
-    }
-}
-
 function setupCheckNewReleases(){
     let localTime = new Date();
     if(localTime.getMinutes() === 0){
@@ -102,7 +74,7 @@ function setupCheckNewReleases(){
 
 discordClient.on('ready', async () => {
     //Load all the info about the guilds
-    await loadAllInfoGuilds();
+    await loadGuildsInfo();
     console.log('All info about registered guilds successfully loaded!');
 
     //Setup the timeouts and intervals for new releases
