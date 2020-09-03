@@ -280,6 +280,20 @@ async function removeReleasesChannel(channelID, guildID){
     return result.modifiedCount != 0;
 }
 
+async function removeReleasesChannels(channelIDs, guildID){
+    const result = await client.db.collection('guild').updateOne(
+        {_id: guildID},
+        {$pull: {idReleasesChannels: {$in: channelIDs}}}
+    )
+
+    await client.db.collection('artist').updateMany(
+        {idGuildChannels: {$in: channelIDs}},
+        {$pull : {idGuildChannels: {$in: channelIDs}}}
+    )    
+
+    return result.modifiedCount != 0;
+}
+
 async function removeReleasesChannel(channelID){
     const result = await client.db.collection('guild').updateOne(
         {idReleasesChannels: channelID},
@@ -332,5 +346,6 @@ exports.getArtistsChannel = getArtistsChannel
 exports.getArtist = getArtist
 exports.addReleasesChannel = addReleasesChannel
 exports.removeReleasesChannel = removeReleasesChannel
+exports.removeReleasesChannels = removeReleasesChannels
 exports.moveArtistsChannel = moveArtistsChannel
 exports.numberReleasesChannels = numberReleasesChannels

@@ -30,6 +30,8 @@ async function createChannel(guild){
         ] 
     })
 
+    discordClient.releasesChannels.set(guild.id, []);
+    discordClient.releasesCommandsChannels.set(guild.id, idReleasesCommandsChannel.id);
     db.insertGuildDB(guild.id, idReleasesCommandsChannel.id);
 }
 
@@ -48,6 +50,8 @@ async function createRole(guild){
 }
 
 async function removeGuild(guild){
+    discordClient.releasesChannels.delete(guild.id);
+    console.log(discordClient.releasesChannels);
     db.removeGuildDB(guild.id);
 }
 
