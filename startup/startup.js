@@ -3,7 +3,6 @@ const spotify = require('../api/spotify-properties');
 const {discordToken} = require('../config.json');
 const discordClient = require('../api/discord-properties');
 
-const dbNewConnection = require('../api/mongoDB-funcs').newConnection;
 const sendNewReleases = require('../src/checkReleases').sendNewReleases;
 const loadGuildsInfo = require('./guildsInfo');
 
@@ -16,9 +15,6 @@ async function startup(){
 
         //Refresh token after 1 hour
         setInterval(refreshToken, 3600000)
-
-        //Configure a new connection to MongoDB
-        await dbNewConnection()
 
         //Load all the available commands
         loadAllCommands()
