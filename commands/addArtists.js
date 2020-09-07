@@ -1,4 +1,4 @@
-const checkReleases = require('../src/checkReleases');
+const artistHandlerDB = require('../database/artist/artistHandler');
 const search = require('../src/search/search');
 const {releasesCommandsChannels, releasesChannels} = require('../api/discord-properties');
 
@@ -49,7 +49,23 @@ async function addArtists(msgDiscord, possibleArtists, idReleasesChannel){
     if(possibleArtists.length < 20){
         const artists = await search.searchArtists(possibleArtists, msgDiscord)
         if(artists !== null){
-            checkReleases.addArtistsToGuild(artists, idReleasesChannel, msgDiscord);
+            let message = '';
+            const addedArtists = await artistHandlerDB.addArtists(artists, idReleasesChannel);
+
+            const numberRegisteredArtists = artists.length - addedArtists.length;
+
+            switch(numberRegisteredArtists){
+                case artists.length:
+                    message += 'All the mentioned artists are already registered in the server!';
+                    break;
+                default:
+                    message += '**' + addedArtists.join(', ') + '** registered in the server successfully! '
+                    if(numberRegisteredArtists > 0){
+                        message += 'The others are already registered!';
+                    }
+            }
+
+            msgDiscord.channel.send(message);
         }
     } else {
         msgDiscord.channel.send("It is not possible to search more than 20 artists in a single search!");

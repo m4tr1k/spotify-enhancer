@@ -1,14 +1,4 @@
-const db = require('../api/mongoDB-funcs');
 const releases = require('./releases');
-
-async function verifyNewReleasesCommandsChannel(idChannel){
-    const isNewReleasesCommandsChannel = await db.findChannel(idChannel);
-    return isNewReleasesCommandsChannel;
-}
-
-async function addArtistsToGuild(artists, idReleasesChannel, msgDiscord){
-    await db.insertArtistsDB(artists, idReleasesChannel, msgDiscord);
-}
 
 async function removeArtistsGuild(artists, idReleasesChannels, msgDiscord){
     await db.removeArtistsDB(artists, idReleasesChannels, msgDiscord);
@@ -31,7 +21,5 @@ async function sendNewReleases(){
     })
 }
 
-exports.verifyNewReleasesCommandsChannel = verifyNewReleasesCommandsChannel;
-exports.addArtistsToGuild = addArtistsToGuild;
 exports.sendNewReleases = sendNewReleases;
 exports.removeArtistsGuild = removeArtistsGuild;

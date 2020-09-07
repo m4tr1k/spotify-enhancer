@@ -2,7 +2,7 @@ const axios = require('axios');
 const {MessageEmbed} = require('discord.js');
 const discordClient = require('../api/discord-properties');
 const spotify = require('../api/spotify-properties');
-const db = require('../api/mongoDB-funcs');
+//const db = require('../api/mongoDB-properties');
 
 var Album = function(props){
     this.nameAlbum = props.nameAlbum;
@@ -158,10 +158,10 @@ async function checkNewReleases(artist){
 
 async function getLatestReleases(artistId){
     const albums = await getLatestAlbumObjects(artistId);
-    if(albums.length !== 0 && albums !== undefined){
+    if(albums.length !== 0){
         return await getAlbumInfos(albums);
     } else {
-        return '';
+        return [];
     }
 }
 
@@ -229,7 +229,7 @@ async function getLatestAlbumObjects(artistId){
         dataAlbums = await spotify.client.getArtistAlbums(artistId, {offset: 0, include_groups: 'album,single'})
     } catch (err){
         await sleep(err.headers['retry-after'] * 1000);
-        return;
+        return getLatestAlbumObjects(artistId);
     }
 
     if(dataAlbums.body.items.length !== 0){
