@@ -1,9 +1,5 @@
 const releases = require('./releases');
 
-async function removeArtistsGuild(artists, idReleasesChannels, msgDiscord){
-    await db.removeArtistsDB(artists, idReleasesChannels, msgDiscord);
-}
-
 async function sendNewReleases(){
     let newReleases = [];
     const cursor = await db.getAllArtists();
@@ -22,4 +18,3 @@ async function sendNewReleases(){
 }
 
 exports.sendNewReleases = sendNewReleases;
-exports.removeArtistsGuild = removeArtistsGuild;

@@ -1,5 +1,6 @@
 const mongoClient = require('../../api/mongoDB-properties');
 const { insertArtistsDB, updateArtistsDB } = require('./addArtists');
+const { removeArtistGuild } = require('./removeArtists');
 
 async function addArtists(artists, idReleasesChannel) {
     //Artists that are registered in the database and on a certain guild
@@ -31,7 +32,6 @@ async function addArtists(artists, idReleasesChannel) {
             await updateArtistsDB(registeredArtistsDB, idReleasesChannel);
             unregisteredArtists = unregisteredArtists.filter(artist => {
                 if (!registeredArtistsDB.artistIds.includes(artist.artistId)) {
-                    console.log(boas);
                     return artist;
                 }
             })
@@ -100,26 +100,18 @@ function getRegisteredArtistsDB(artists) {
     ])
 }
 
-async function removeArtistsDB(artistNames, idReleasesChannels, msgDiscord) {
-    let removedArtists = false;
-    for (var i = 0; i < artistNames.length; i++) {
-        const newDocument = await client.collection('artist').updateOne(
-            { nameArtist_lowerCase: artistNames[i].toLowerCase() },
-            {
-                $pull: { idGuildChannels: { $in: idReleasesChannels } }
-            }
-        )
+async function removeArtists(artistNames, idReleasesChannels) {
+    let removedArtists = [];
+    for (const artistName of artistNames) {
+        const wasRemoved = await removeArtistGuild(artistName, idReleasesChannels);
 
-        if (newDocument.result.nModified === 0) {
-            msgDiscord.channel.send('**' + artistNames[i] + '** does not exist in the database!');
-        } else {
-            removedArtists = true;
+        if(wasRemoved){
+            removedArtists.push(artistName);
         }
     }
 
-    if (removedArtists) {
-        msgDiscord.channel.send('Artists successfully deleted!');
-    }
+    return removedArtists;
 }
 
 exports.addArtists = addArtists;
+exports.removeArtists = removeArtists;
