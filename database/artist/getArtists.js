@@ -6,11 +6,57 @@ const mongoClient = require('../../api/mongoDB-properties');
     - Are registered on a certain guild
 */
 
-function getRegisteredArtistsGuild(artists, idReleasesChannel) {
-    const idArtists = artists.map(artist => artist.artistId);
-
+function getRegisteredArtistsGuild(artistIds, idReleasesChannel) {
     return mongoClient.collection('artist').aggregate([
-        { $match: { _id: { $in: idArtists }, idGuildChannels: idReleasesChannel } },
+        { $match: { _id: { $in: artistIds }, idGuildChannels: idReleasesChannel } },
+        {
+            $group: {
+                _id: null,
+                artistNames: { $addToSet: "$nameArtist" }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                artistNames: 1
+            }
+        }
+    ])
+}
+
+/**
+    Returns object with an array of the artists that:
+    - Are registered in the database 
+    - Are registered on a certain guild
+*/
+
+function getRegisteredArtistsGuild(idReleasesChannels) {
+    return mongoClient.collection('artist').aggregate([
+        { $match: { idGuildChannels: { $in: idReleasesChannels } } },
+        {
+            $group: {
+                _id: null,
+                artistNames: { $addToSet: "$nameArtist" }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                artistNames: 1
+            }
+        }
+    ])
+}
+
+/**
+    Returns object with an array of the artists that:
+    - Are registered in the database 
+    - Are registered on a certain channel
+*/
+
+function getRegisteredArtistsChannel(idReleasesChannel) {
+    return mongoClient.collection('artist').aggregate([
+        { $match: { idGuildChannels: idReleasesChannel } },
         {
             $group: {
                 _id: null,
@@ -54,4 +100,5 @@ function getRegisteredArtistsDB(artistIds) {
 }
 
 exports.getRegisteredArtistsGuild = getRegisteredArtistsGuild;
+exports.getRegisteredArtistsChannel = getRegisteredArtistsChannel;
 exports.getRegisteredArtistsDB = getRegisteredArtistsDB;

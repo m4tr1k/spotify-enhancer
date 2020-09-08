@@ -4,7 +4,8 @@ const { getRegisteredArtistsDB, getRegisteredArtistsGuild } = require('./getArti
 
 async function addArtists(artists, idReleasesChannel) {
     //Artists that are registered in the database and on a certain guild
-    const registeredArtistsGuildCursor = getRegisteredArtistsGuild(artists, idReleasesChannel);
+    const idArtists = artists.map(artist => artist.artistId);
+    const registeredArtistsGuildCursor = getRegisteredArtistsGuild(idArtists, idReleasesChannel);
 
     const registeredArtistsGuild = await registeredArtistsGuildCursor.next();
     let unregisteredArtists, unregisteredArtistsNames = [];
