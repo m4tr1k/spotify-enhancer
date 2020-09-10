@@ -1,5 +1,5 @@
 const { insertArtistsDB, updateArtistsDB } = require('./addArtists');
-const { removeArtistGuild } = require('./removeArtists');
+const { removeArtistGuild, removeAllArtistsGuild } = require('./removeArtists');
 const { getRegisteredArtistsDB, getRegisteredArtistsGuild } = require('./getArtists');
 
 async function addArtists(artists, idReleasesChannel) {
@@ -60,5 +60,10 @@ async function removeArtists(artistNames, idReleasesChannels) {
     return removedArtists;
 }
 
+async function removeAllArtists(idReleasesChannels){
+    await removeAllArtistsGuild(idReleasesChannels);
+}
+
 exports.addArtists = addArtists;
 exports.removeArtists = removeArtists;
+exports.removeAllArtists = removeAllArtists;
