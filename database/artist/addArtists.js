@@ -24,6 +24,21 @@ async function updateArtistsDB(artists, idReleasesChannel){
 }
 
 /**
+ * Register a given artist on a certain releases channel
+ * 
+ * Function only used to move artists from different channels
+ * @param {string} nameArtist Name of the artist
+ * @param {string} idReleasesChannel Id of the channel to register the given artist
+ */
+
+async function registerArtistChannel(nameArtist, idReleasesChannel){
+    await mongoClient.collection('artist').updateOne(
+        {nameArtist_lowerCase: nameArtist},
+        {$push: {idGuildChannels: idReleasesChannel}}
+    )
+}
+
+/**
  * Creates an array of artist objects to be inserted in the database.
  * 
  * Also gives orders to print the latest releases if they were released in that current day.
@@ -69,3 +84,4 @@ async function createArrayArtistsObjects(artists, idReleasesChannel) {
 
 exports.insertArtistsDB = insertArtistsDB;
 exports.updateArtistsDB = updateArtistsDB;
+exports.registerArtistChannel = registerArtistChannel;
