@@ -4,7 +4,7 @@ const { moveArtists } = require('../database/artist/artistHandler');
 async function moveArtistsChannel(msgDiscord, content) {
     const isReleasesCommandsChannel = releasesCommandsChannels.some(releasesCommandsChannel => releasesCommandsChannel === msgDiscord.channel.id);
     if (isReleasesCommandsChannel) {
-        if (content.length > 2) {
+        if (content.length >= 2) {
             const releasesChannel = content.splice(content.length - 1, 1).join();
             const futureIdReleasesChannel = releasesChannel.substring(2, releasesChannel.length - 1);
 
