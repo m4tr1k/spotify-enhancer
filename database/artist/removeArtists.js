@@ -9,7 +9,7 @@ async function removeArtistGuild(artistName, idReleasesChannels){
     return document.result.nModified !== 0;
 }
 
-async function removeAllArtistsGuild(idReleasesChannels){
+async function removeAllArtistsChannels(idReleasesChannels){
     await mongoClient.collection('artist').updateMany(
         { idGuildChannels: { $in: idReleasesChannels } },
         { $pull: { idGuildChannels: { $in: idReleasesChannels } } }
@@ -17,4 +17,4 @@ async function removeAllArtistsGuild(idReleasesChannels){
 }
 
 exports.removeArtistGuild = removeArtistGuild;
-exports.removeAllArtistsGuild = removeAllArtistsGuild;
+exports.removeAllArtistsChannels = removeAllArtistsChannels;

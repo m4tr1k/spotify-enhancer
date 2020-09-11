@@ -1,11 +1,11 @@
 const discordClient = require('../api/discord-properties')
-const db = require('../api/mongoDB-funcs');
+const { addGuildDB, removeGuildDB } = require('../database/guild/guildHandler');
 
 async function welcome(guild){
-    Promise.all(
-        [discordClient.users.cache.get(guild.ownerID).send("**Hello there** 👋\nThank you for using me to enhance your spotify experience 🚀\n\nI created a new channel 'releases-commands' where you can control me and add your favourite artists!\n If you have any doubts, You can type at any time '!SE help' for more information.\n\nHope to enhance your spotify experience 🧡")], 
-        [createChannel(guild)]
-    ); 
+    Promise.all([
+        discordClient.users.cache.get(guild.ownerID).send("**Hello there** 👋\nThank you for using me to enhance your spotify experience 🚀\n\nI created a new channel 'releases-commands' where you can control me and add your favourite artists!\n If you have any doubts, You can type at any time '!SE help' for more information.\n\nHope to enhance your spotify experience 🧡"), 
+        createChannel(guild)
+    ]); 
 }
 
 async function createChannel(guild){
@@ -32,7 +32,7 @@ async function createChannel(guild){
 
     discordClient.releasesChannels.set(guild.id, []);
     discordClient.releasesCommandsChannels.set(guild.id, idReleasesCommandsChannel.id);
-    db.insertGuildDB(guild.id, idReleasesCommandsChannel.id);
+    addGuildDB(guild.id, idReleasesCommandsChannel.id);
 }
 
 async function createRole(guild){
@@ -50,10 +50,10 @@ async function createRole(guild){
 }
 
 async function removeGuild(guild){
+    const idReleasesChannels = discordClient.releasesChannels.get(guild.id);
     discordClient.releasesChannels.delete(guild.id);
-    console.log(discordClient.releasesChannels);
-    db.removeGuildDB(guild.id);
+    removeGuildDB(guild.id, idReleasesChannels);
 }
 
 exports.welcome = welcome;
-exports.removeGuild = removeGuild
+exports.removeGuild = removeGuild;

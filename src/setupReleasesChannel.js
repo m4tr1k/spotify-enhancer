@@ -52,13 +52,9 @@ async function channelDelete(channel) {
     let idReleasesChannels = releasesChannels.get(channel.guild.id);
 
     if (idReleasesChannels.includes(channel.id)) {
-        Promise.all([
-            db.removeReleasesChannel(channel.id),
-            db.deleteAllArtistsReleasesChannel(channel.id)
-        ])
+        removeReleasesChannel(channel.id, channel.guild.id);
     }
 }
-
 
 exports.addChannel = addChannel;
 exports.removeChannel = removeChannel;

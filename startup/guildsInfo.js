@@ -1,8 +1,6 @@
 const discordClient = require('../api/discord-properties');
 
-const getGuildsInfo = require('../api/mongoDB-funcs').getGuildsInfo;
-const removeGuilds = require('../api/mongoDB-funcs').removeGuildsDB;
-const removeReleasesChannels = require('../api/mongoDB-funcs').removeReleasesChannels;
+const { getGuildsInfo, removeGuildsDB, removeReleasesChannels } = require('../database/guild/guildHandler');
 
 async function loadGuildsInfo(){
     const guildsInfoCursor = getGuildsInfo();
@@ -27,7 +25,7 @@ async function loadGuildsInfo(){
 
         if(unregisteredGuilds.length > 0){
             console.log('The bot was kicked/banned from ' + unregisteredGuilds.length + ' guilds while it was offline :(');
-            await removeGuilds(unregisteredGuilds);
+            await removeGuildsDB(unregisteredGuilds);
             console.log('All the info regarding those guilds was deleted')
         }
     }
