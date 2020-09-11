@@ -1,11 +1,11 @@
-const addChannel = require('../src/setupReleasesChannel').addChannel;
-const {releasesCommandsChannels} = require('../api/discord-properties');
+const { addChannel } = require('../src/setupReleasesChannel');
+const { releasesCommandsChannels } = require('../api/discord-properties');
 
-async function addReleasesChannel(msgDiscord, content){
+async function addReleasesChannel(msgDiscord, content) {
     const isReleasesCommandsChannel = releasesCommandsChannels.some(releasesCommandsChannel => releasesCommandsChannel === msgDiscord.channel.id);
 
-    if(!isReleasesCommandsChannel){
-        if(content.length == 0){
+    if (!isReleasesCommandsChannel) {
+        if (content.length == 0) {
             addChannel(msgDiscord);
         } else {
             msgDiscord.reply('This command does not have arguments! (type `!SE help` for more details)');
@@ -22,7 +22,7 @@ module.exports = {
     description: 'Register a channel to be a releases channel.',
     note: '- You must have the New Releases Manager role assigned in order to add channels.\n- You can only have 10 releases channels in the server!',
     usage: ['`!SE addchannel`'],
-    execute(msgDiscord, content){
+    execute(msgDiscord, content) {
         addReleasesChannel(msgDiscord, content)
     }
 }

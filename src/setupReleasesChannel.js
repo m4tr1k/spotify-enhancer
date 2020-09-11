@@ -1,17 +1,17 @@
-const db = require('../api/mongoDB-funcs');
-const {releasesChannels} = require('../api/discord-properties');
+const { addReleasesChannel, removeReleasesChannel } = require('../database/guild/guildHandler')
+const { releasesChannels } = require('../api/discord-properties');
 
 async function addChannel(msgDiscord) {
     const hasPermission = msgDiscord.member.roles.cache.some(role => role.name === 'New Releases Manager');
 
-    if(hasPermission){
+    if (hasPermission) {
         let idReleasesChannels = releasesChannels.get(msgDiscord.guild.id);
 
-        if(!idReleasesChannels.includes(msgDiscord.channel.id)){
-            if(idReleasesChannels.length < 10){
+        if (!idReleasesChannels.includes(msgDiscord.channel.id)) {
+            if (idReleasesChannels.length < 10) {
                 idReleasesChannels.push(msgDiscord.channel.id);
                 Promise.all([
-                    db.addReleasesChannel(msgDiscord.channel.id, msgDiscord.guild.id), 
+                    addReleasesChannel(msgDiscord.channel.id, msgDiscord.guild.id),
                     releasesChannels.set(msgDiscord.guild.id, idReleasesChannels)
                 ])
                 msgDiscord.channel.send("Channel added successfully!");
@@ -26,18 +26,17 @@ async function addChannel(msgDiscord) {
     }
 }
 
-async function removeChannel(msgDiscord){
+async function removeChannel(msgDiscord) {
     const hasPermission = msgDiscord.member.roles.cache.some(role => role.name === 'New Releases Manager');
 
-    if(hasPermission){
+    if (hasPermission) {
         let idReleasesChannels = releasesChannels.get(msgDiscord.guild.id);
 
-        if(idReleasesChannels.includes(msgDiscord.channel.id)){
+        if (idReleasesChannels.includes(msgDiscord.channel.id)) {
             const index = idReleasesChannels.indexOf(msgDiscord.channel.id);
             idReleasesChannels.splice(index, 1);
             Promise.all([
-                db.removeReleasesChannel(msgDiscord.channel.id, msgDiscord.guild.id), 
-                db.deleteAllArtistsReleasesChannel(msgDiscord.channel.id),
+                removeReleasesChannel(msgDiscord.channel.id, msgDiscord.guild.id),
                 releasesChannels.set(msgDiscord.guild.id, idReleasesChannels)
             ]);
             msgDiscord.channel.send("Channel deleted successfully!");
@@ -49,10 +48,10 @@ async function removeChannel(msgDiscord){
     }
 }
 
-async function channelDelete(channel){
+async function channelDelete(channel) {
     let idReleasesChannels = releasesChannels.get(channel.guild.id);
 
-    if(idReleasesChannels.includes(channel.id)){
+    if (idReleasesChannels.includes(channel.id)) {
         Promise.all([
             db.removeReleasesChannel(channel.id),
             db.deleteAllArtistsReleasesChannel(channel.id)
