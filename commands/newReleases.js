@@ -1,6 +1,6 @@
 const search = require('../src/search/search');
-const releases = require('../src/releases');
-const getArtistDB = require('../api/mongoDB-funcs').getArtist;
+const { createEmbeds, getLatestReleases } = require('../src/releases');
+const { getRegisteredArtistsDB } = require('../database/artist/getArtists');
 const {releasesCommandsChannels, releasesChannels} = require('../api/discord-properties');
 
 async function newReleases(msgDiscord, content){
@@ -45,7 +45,6 @@ async function newReleasesGuildChannel(msgDiscord, content, releasesChannels){
 }
 
 async function printNewReleases(msgDiscord, possibleArtists, releasesChannel){
-    let printedReleases = false;
     let artistIDs = [];
 
     for(let i = 0; i < possibleArtists.length; i++){
@@ -60,34 +59,39 @@ async function printNewReleases(msgDiscord, possibleArtists, releasesChannel){
         }
     }
 
-    if(artistIDs.length != 0){
-        let idReleasesChannel = [];
-        
-        idReleasesChannel.push(releasesChannel);
+    if(artistIDs.length !== 0){
+        const cursorArtistsReleases = getRegisteredArtistsDB(artistIDs);
+        const artistsReleases = await cursorArtistsReleases.next();
 
-        for(let i = 0; i < artistIDs.length; i++){
-            const cursorArtist = getArtistDB(artistIDs[i]);
-            const artistExists = await cursorArtist.hasNext();
-
-            if(artistExists){
-                const artist = await cursorArtist.next();
-                if(artist.latestReleases.length !== 0){
-                    releases.createEmbeds(artist.latestReleases, idReleasesChannel);
-                    printedReleases = true;
+        let releasesToPrint = [];
+        if(artistsReleases !== null){
+            releasesToPrint = [...artistsReleases.latestReleases];
+            artistIDs = artistIDs.filter(artistID => {
+                if(!artistsReleases.artistIds.includes(artistID)){
+                    return artistID
                 }
-            } else {
-                const latestReleases = await releases.getLatestReleases(artistIDs[i]);
-                if(latestReleases != '' && latestReleases.length != 0){
-                    releases.createEmbeds(latestReleases, idReleasesChannel);
-                    printedReleases = true;
-                }
-            }
+            })
         }
 
-        if(printedReleases){
+        for(let i = 0; i < artistIDs.length; i++){
+            const latestReleases = await getLatestReleases(artistIDs[i]);
+            latestReleases.forEach(lrelease => {
+                const containsRelease = releasesToPrint.some(release => {
+                    return release.spotifyLink === lrelease.spotifyLink
+                })
+
+                if(!containsRelease){
+                    releasesToPrint.push(lrelease);
+                }
+            })
+            
+        }
+
+        if(releasesToPrint.length > 0){
+            createEmbeds(releasesToPrint, [releasesChannel]);
             msgDiscord.channel.send("Latest releases of the selected artists printed!");
         } else {
-            msgDiscord.channel.send("It was not possible to print the latest releases of the selected artists!");
+            msgDiscord.channel.send("It was not possible to print the latest releases of the desired artists");
         }
     }
 }

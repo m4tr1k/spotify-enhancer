@@ -1,18 +1,18 @@
-const moveArtists = require('../api/mongoDB-funcs').moveArtistsChannel;
-const {releasesCommandsChannels, releasesChannels} = require('../api/discord-properties');
+const { releasesCommandsChannels, releasesChannels } = require('../api/discord-properties');
+const { moveArtists } = require('../database/artist/artistHandler');
 
-async function moveArtistsChannel(msgDiscord, content){
+async function moveArtistsChannel(msgDiscord, content) {
     const isReleasesCommandsChannel = releasesCommandsChannels.some(releasesCommandsChannel => releasesCommandsChannel === msgDiscord.channel.id);
-    if(isReleasesCommandsChannel){
-        if(content.length == 2){
-            const releasesChannel = content[content.length - 1];
-            const idReleasesChannel = releasesChannel.substring(2, releasesChannel.length - 1);
-        
+    if (isReleasesCommandsChannel) {
+        if (content.length >= 2) {
+            const releasesChannel = content.splice(content.length - 1, 1).join();
+            const futureIdReleasesChannel = releasesChannel.substring(2, releasesChannel.length - 1);
+
             const idReleasesChannels = releasesChannels.get(msgDiscord.guild.id);
-            if(idReleasesChannels.includes(idReleasesChannel)){
-                const artistName = content[0].trim();
-                const hasMoved = await moveArtists(artistName, idReleasesChannel, idReleasesChannels);
-                if(hasMoved){
+            if (idReleasesChannels.includes(futureIdReleasesChannel)) {
+                const artistName = content.join(' ');
+                const hasMoved = await moveArtists(artistName, idReleasesChannels, futureIdReleasesChannel);
+                if (hasMoved) {
                     msgDiscord.channel.send('Artists moved successfully!')
                 } else {
                     msgDiscord.channel.send('**' + artistName + '** is not registered in the server!');
@@ -35,7 +35,7 @@ module.exports = {
     description: 'Moves the upcoming artist releases from one channel to another',
     note: 'Command only possible if there is more than one releases channel',
     usage: ['`!SE move name_artist #name-channel`'],
-    execute(msgDiscord, content){
+    execute(msgDiscord, content) {
         moveArtistsChannel(msgDiscord, content)
     }
 }

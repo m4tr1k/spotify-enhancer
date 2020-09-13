@@ -1,14 +1,13 @@
 const fs = require('fs');
 const spotify = require('../api/spotify-properties');
-const {discordToken} = require('../config.json');
+const { discordToken } = require('../config.json');
 const discordClient = require('../api/discord-properties');
 
-const dbNewConnection = require('../api/mongoDB-funcs').newConnection;
-const sendNewReleases = require('../src/checkReleases').sendNewReleases;
+const checkNewReleases = require('../src/checkReleases');
 const loadGuildsInfo = require('./guildsInfo');
 
-async function startup(){
-    try{
+async function startup() {
+    try {
         //Connection to Spotify API
         const data = await spotify.client.clientCredentialsGrant()
         spotify.client.setAccessToken(data.body['access_token'])
@@ -16,9 +15,6 @@ async function startup(){
 
         //Refresh token after 1 hour
         setInterval(refreshToken, 3600000)
-
-        //Configure a new connection to MongoDB
-        await dbNewConnection()
 
         //Load all the available commands
         loadAllCommands()
@@ -29,26 +25,26 @@ async function startup(){
         discordClient.setImmediate(() => {
             Promise.all([
                 discordClient.user.setStatus('dnd'),
-                discordClient.user.setActivity("Initializing...") 
+                discordClient.user.setActivity("Initializing...")
             ]);
         })
         console.log('Bot is logged in!')
-    } catch (err){
+    } catch (err) {
         console.log('Something went wrong! Application must restart!', err);
     }
 }
 
-async function refreshToken(){
-    try{
+async function refreshToken() {
+    try {
         const data = await spotify.client.clientCredentialsGrant();
         spotify.client.setAccessToken(data.body['access_token']);
         console.log('Refreshed token! Expires in ' + data.body.expires_in + ' seconds');
-    } catch (err){
+    } catch (err) {
         console.log('Could not refresh access token', err);
     }
 }
 
-function loadAllCommands(){
+function loadAllCommands() {
     const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
     for (const file of commandFiles) {
@@ -57,18 +53,18 @@ function loadAllCommands(){
     }
 }
 
-function setupCheckNewReleases(){
+function setupCheckNewReleases() {
     let localTime = new Date();
-    if(localTime.getMinutes() === 0){
-        sendNewReleases();
-        setInterval(() => sendNewReleases(), 3600000);
+    if (localTime.getMinutes() === 0) {
+        checkNewReleases();
+        setInterval(() => checkNewReleases(), 3600000);
     } else {
         localTime.setHours(localTime.getHours() + 1);
         localTime.setMinutes(0);
         localTime.setSeconds(0);
         localTime.setMilliseconds(0);
         const timeUntilCheck = localTime - new Date();
-        setTimeout(() => {sendNewReleases(), setInterval(() => sendNewReleases(), 3600000)}, timeUntilCheck);
+        setTimeout(() => { checkNewReleases(), setInterval(() => checkNewReleases(), 3600000) }, timeUntilCheck);
     }
 }
 
@@ -86,7 +82,7 @@ discordClient.on('ready', async () => {
 
     Promise.all([
         discordClient.user.setStatus('available'),
-        discordClient.user.setActivity("!SE help", {type: 'LISTENING'})
+        discordClient.user.setActivity("!SE help", { type: 'LISTENING' })
     ])
 
     console.log('Bot is ready to use!');
