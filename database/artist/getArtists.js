@@ -1,6 +1,16 @@
 const mongoClient = require('../../api/mongoDB-properties');
 
 /**
+ * Return cursor with all the artists registered in the database
+ * 
+ * Used to check which artists have new releases after
+ */
+
+function getAllRegisteredArtists(){
+    return mongoClient.collection('artist').find();
+}
+
+/**
     Returns object with an array of the artists that:
     - Are registered in the database 
     - Are registered on a certain guild
@@ -99,6 +109,33 @@ function getRegisteredArtistsDB(artistIds) {
     ])
 }
 
+/**
+ * Returns all the registered releases channels that are assigned to the desired artists
+ * 
+ * @param {[]} artistIds Ids of the artists
+ */
+
+function getArtistsReleasesChannels(artistIds){
+    return mongoClient.collection('artist').aggregate([
+        { $match: { _id: { $in: artistIds } } },
+        { $unwind: "$idGuildChannels" },
+        {
+            $group: {
+                _id: null,
+                idChannels: { $addToSet: "$idGuildChannels" },
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                idChannels: 1
+            }
+        }
+    ])
+}
+
+exports.getAllRegisteredArtists = getAllRegisteredArtists;
 exports.getRegisteredArtistsGuild = getRegisteredArtistsGuild;
 exports.getRegisteredArtistsChannel = getRegisteredArtistsChannel;
 exports.getRegisteredArtistsDB = getRegisteredArtistsDB;
+exports.getArtistsReleasesChannels = getArtistsReleasesChannels;

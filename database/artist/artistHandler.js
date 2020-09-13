@@ -1,6 +1,35 @@
 const { insertArtistsDB, updateArtistsDB, registerArtistChannel } = require('./addArtists');
 const { removeArtistGuild, removeAllArtistsChannels } = require('./removeArtists');
-const { getRegisteredArtistsDB, getRegisteredArtistsGuild } = require('./getArtists');
+const { getRegisteredArtistsDB, getRegisteredArtistsGuild, getAllRegisteredArtists, getArtistsReleasesChannels } = require('./getArtists');
+const { removeOldReleases, updateNewReleases } = require('./releasesHandler');
+
+function getAllArtists(){
+    return getAllRegisteredArtists();
+}
+
+function getArtistsRegisteredReleasesChannels(artistIds){
+    return getArtistsReleasesChannels(artistIds);
+}
+
+async function updateNewReleasesArtist(newestReleases, oldReleases, artistID){
+    const currentDate = new Date();
+    currentDate.setHours(0,0,0,0);
+
+    oldReleases = oldReleases.map(release => {
+        const releaseDate = new Date(release.releaseDate);
+        if(releaseDate < currentDate){
+            return release;
+        }
+    })
+
+    if(oldReleases.length !== 0){
+        await removeOldReleases(oldReleases, artistID);
+    }
+
+    for(const newestRelease of newestReleases){
+        updateNewReleases(newestRelease)
+    }
+}
 
 async function addArtists(artists, idReleasesChannel) {
     //Artists that are registered in the database and on a certain guild
@@ -74,6 +103,9 @@ async function moveArtists(artistName, idReleasesChannels, futureIdReleasesChann
     }
 }
 
+exports.getAllArtists = getAllArtists;
+exports.getArtistsRegisteredReleasesChannels = getArtistsRegisteredReleasesChannels;
+exports.updateNewReleasesArtist = updateNewReleasesArtist;
 exports.addArtists = addArtists;
 exports.removeArtists = removeArtists;
 exports.removeAllArtists = removeAllArtists;
