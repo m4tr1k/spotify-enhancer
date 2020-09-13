@@ -4,22 +4,8 @@ const discordClient = require('../api/discord-properties');
 const spotify = require('../api/spotify-properties');
 //const db = require('../api/mongoDB-properties');
 
-var Album = function(props){
-    this.nameAlbum = props.nameAlbum;
-    this.allArtists = props.allArtists;
-    this.artists = props.artists;
-    this.featArtists = props.featArtists;
-    this.label = props.label
-    this.releaseDate = props.releaseDate;
-    this.tracklist = props.tracklist;
-    this.coverArt = props.coverArt;
-    this.spotifyLink = props.spotifyLink;
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
- }
-
+function createEmbeds(albums, idGuildChannels) {
+    for (var i = 0; i < albums.length; i++) {
 function createEmbeds(albums, idGuildChannels){
     for(var i = 0; i < albums.length; i++){
         createEmbedAlbum(albums[i], idGuildChannels);

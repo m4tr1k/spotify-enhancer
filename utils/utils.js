@@ -11,4 +11,16 @@ function checkTodayRelease(releaseDateString){
     return releaseDate >= currentDate
 }
 
+/**
+ * Number of miliseconds that the program needs to wait in order to be able to complete the requests
+ * 
+ * Useful to deal with rate limit
+ * @param {number} ms Time in miliseconds
+ */
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 exports.checkTodayRelease = checkTodayRelease;
+exports.sleep = sleep;
