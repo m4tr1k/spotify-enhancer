@@ -79,7 +79,7 @@ In order to run the bot on your machine, you need:
 
 If everything goes smoothly, you should see this in your console:
 
-![image-20200913193245156](/Users/franfernandes88/Library/Application Support/typora-user-images/image-20200913193245156.png)
+![image-20200913193245156](img/success.png)
 
 ## Contributing
 
