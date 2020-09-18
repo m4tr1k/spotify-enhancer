@@ -45,7 +45,7 @@ Sometimes on Spotify, the release that was supposed to be associated to a given 
 
 ```
 !SE new Headhunterz, https://open.spotify.com/artist/2JqPH5sGxBA5lDMUmO5uAE?si=d8vw8bA9TlS0hxglNeFXQQ (use this if you only have one releases channel)
-!SE new Headhunterz, https://open.spotify.com/artist/2JqPH5sGxBA5lDMUmO5uAE?si=d8vw8bA9TlS0hxglNeFXQQ (use this if you have more than one releases channel)
+!SE new Headhunterz, https://open.spotify.com/artist/2JqPH5sGxBA5lDMUmO5uAE?si=d8vw8bA9TlS0hxglNeFXQQ #name_channel(use this if you have more than one releases channel)
 ```
 
 ## Features
