@@ -1,10 +1,10 @@
 const axios = require('axios');
-const { MessageEmbed } = require('discord.js');
 const discordClient = require('../api/discord-properties');
 const spotify = require('../api/spotify-properties');
 const { getArtistsReleasesChannels } = require('../database/artist/getArtists');
 const { checkTodayRelease, sleep } = require('../utils/utils');
 const Album = require('./components/Album');
+const ReleaseEmbed = require('./components/ReleaseEmbed');
 
 function createEmbeds(albums, idGuildChannels) {
     for (var i = 0; i < albums.length; i++) {
@@ -26,20 +26,16 @@ function createEmbedAlbum(album, idGuildChannels) {
         description += '\n\n' + discordClient.emojis.cache.get('730078460747317328').toString() + ' [Spotify Link](' + album.spotifyLink + ')';
     }
 
-    const msg = createEmbed(title, description, album.coverArt);
+    const release = new ReleaseEmbed({
+        title: title,
+        description: description,
+        coverArt: album.coverArt
+    })
 
     idGuildChannels.forEach(idGuildChannel => {
         const channel = discordClient.channels.cache.find(channel => channel.id === idGuildChannel);
-        sendMessages(msg, channel);
+        release.send(channel);
     })
-}
-
-function createEmbed(title, description, urlImage) {
-    return new MessageEmbed()
-        .setColor('#1DB954')
-        .setTitle(title)
-        .setDescription(description)
-        .setThumbnail(urlImage)
 }
 
 async function getFullAlbumDetails(href) {
@@ -264,17 +260,8 @@ async function sendNewReleases(newestRelease, idReleasesChannels) {
     createEmbedAlbum(newestRelease.album, idReleasesChannels);
 }
 
-function sendMessages(msg, channel) {
-    channel.send(msg).then(lstMsg => {
-        lstMsg.react('👍')
-            .then(() => lstMsg.react('👎'))
-            .then(() => lstMsg.react('❤️'));
-    });
-}
-
 exports.getNewestReleases = getNewestReleases;
 exports.sendNewReleases = sendNewReleases;
 exports.getLatestReleases = getLatestReleases;
 exports.createEmbeds = createEmbeds;
 exports.createEmbedAlbum = createEmbedAlbum;
-exports.sendMessages = sendMessages;
