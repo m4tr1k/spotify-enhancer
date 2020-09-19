@@ -1,5 +1,6 @@
 const search = require('../src/search/search');
-const { createEmbeds, getLatestReleases } = require('../src/releases');
+const { getLatestReleases } = require('../src/releases');
+const { sendReleasesChannel } = require('../src/releases/sendReleases');
 const { getRegisteredArtistsDB } = require('../database/artist/getArtists');
 const {releasesCommandsChannels, releasesChannels} = require('../api/discord-properties');
 
@@ -88,7 +89,7 @@ async function printNewReleases(msgDiscord, possibleArtists, releasesChannel){
         }
 
         if(releasesToPrint.length > 0){
-            createEmbeds(releasesToPrint, [releasesChannel]);
+            sendReleasesChannel(releasesToPrint, releasesChannel);
             msgDiscord.channel.send("Latest releases of the selected artists printed!");
         } else {
             msgDiscord.channel.send("It was not possible to print the latest releases of the desired artists");

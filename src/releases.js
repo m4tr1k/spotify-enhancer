@@ -1,42 +1,9 @@
 const axios = require('axios');
-const discordClient = require('../api/discord-properties');
 const spotify = require('../api/spotify-properties');
 const { getArtistsReleasesChannels } = require('../database/artist/getArtists');
 const { checkTodayRelease, sleep } = require('../utils/utils');
+const { sendReleaseChannels } = require('../src/releases/sendReleases');
 const Album = require('./components/Album');
-const ReleaseEmbed = require('./components/ReleaseEmbed');
-
-function createEmbeds(albums, idGuildChannels) {
-    for (var i = 0; i < albums.length; i++) {
-        createEmbedAlbum(albums[i], idGuildChannels);
-    }
-}
-
-function createEmbedAlbum(album, idGuildChannels) {
-    const title = album.artists + ' ' + album.featArtists + '\n' + album.nameAlbum;
-
-    const splitDate = album.releaseDate.split('-');
-    const releaseDate = splitDate[2] + '-' + splitDate[1] + '-' + splitDate[0];
-
-    let description = 'Label: ' + album.label + '\n' + 'Release Date: ' + releaseDate;
-
-    if (album.tracklist !== '') {
-        description += '\n\nTracklist:\n' + album.tracklist + '\n' + discordClient.emojis.cache.get('730078460747317328').toString() + ' [Spotify Link](' + album.spotifyLink + ')';
-    } else {
-        description += '\n\n' + discordClient.emojis.cache.get('730078460747317328').toString() + ' [Spotify Link](' + album.spotifyLink + ')';
-    }
-
-    const release = new ReleaseEmbed({
-        title: title,
-        description: description,
-        coverArt: album.coverArt
-    })
-
-    idGuildChannels.forEach(idGuildChannel => {
-        const channel = discordClient.channels.cache.find(channel => channel.id === idGuildChannel);
-        release.send(channel);
-    })
-}
 
 async function getFullAlbumDetails(href) {
     let result;
@@ -257,11 +224,9 @@ async function sendNewReleases(newestRelease, idReleasesChannels) {
         }
     }
 
-    createEmbedAlbum(newestRelease.album, idReleasesChannels);
+    sendReleaseChannels(newestRelease.album, idReleasesChannels);
 }
 
 exports.getNewestReleases = getNewestReleases;
 exports.sendNewReleases = sendNewReleases;
 exports.getLatestReleases = getLatestReleases;
-exports.createEmbeds = createEmbeds;
-exports.createEmbedAlbum = createEmbedAlbum;
