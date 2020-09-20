@@ -1,6 +1,6 @@
 const mongoClient = require('../../api/mongoDB-properties');
 const Artist = require('../../src/components/Artist');
-const { getLatestReleases } = require('../../src/releases');
+const { getLatestReleases } = require('../../src/releases/newReleases');
 const { sendReleasesChannel } = require('../../src/releases/sendReleases');
 const { checkTodayRelease } = require('../../utils/utils');
 

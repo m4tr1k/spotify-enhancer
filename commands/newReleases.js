@@ -1,5 +1,5 @@
 const search = require('../src/search/search');
-const { getLatestReleases } = require('../src/releases');
+const { getLatestReleases } = require('../src/releases/newReleases');
 const { sendReleasesChannel } = require('../src/releases/sendReleases');
 const { getRegisteredArtistsDB } = require('../database/artist/getArtists');
 const {releasesCommandsChannels, releasesChannels} = require('../api/discord-properties');

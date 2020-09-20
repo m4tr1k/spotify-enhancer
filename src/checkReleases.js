@@ -1,4 +1,4 @@
-const { getNewestReleases } = require('./releases');
+const { getNewestReleases } = require('./releases/newReleases');
 const { sendReleaseChannels } = require('../src/releases/sendReleases')
 const { getAllArtists, updateNewReleasesArtist } = require('../database/artist/artistHandler');
 

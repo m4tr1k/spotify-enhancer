@@ -21,9 +21,9 @@ function createEmbedAlbum(album) {
     let description = 'Label: ' + album.label + '\n' + 'Release Date: ' + releaseDate;
 
     if (album.tracklist !== '') {
-        description += '\n\nTracklist:\n' + album.tracklist + '\n' + discordClient.emojis.cache.get('730078460747317328').toString() + ' [Spotify Link](' + album.spotifyLink + ')';
+        description += '\n\nTracklist:\n' + album.tracklist + '\n[🎶 Spotify Link](' + album.spotifyLink + ')';
     } else {
-        description += '\n\n' + discordClient.emojis.cache.get('730078460747317328').toString() + ' [Spotify Link](' + album.spotifyLink + ')';
+        description += '\n\n [🎶 Spotify Link](' + album.spotifyLink + ')';
     }
 
     const release = new ReleaseEmbed({

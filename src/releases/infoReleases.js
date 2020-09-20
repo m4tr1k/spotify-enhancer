@@ -1,6 +1,7 @@
 const axios = require('axios');
 const spotify = require('../../api/spotify-properties');
 const Album = require('../components/Album');
+const { sleep } = require('../../utils/utils');
 
 async function getFullAlbumDetails(href) {
     let result;
@@ -119,4 +120,45 @@ async function getAlbumInfos(albums) {
     return latestReleases;
 }
 
-module.exports = getAlbumInfos;
+async function getLatestAlbumObjects(artistId) {
+    let latestReleases = [];
+    let dataAlbums;
+    try {
+        dataAlbums = await spotify.client.getArtistAlbums(artistId, { offset: 0, include_groups: 'album,single' })
+    } catch (err) {
+        await sleep(err.headers['retry-after'] * 1000);
+        return getLatestAlbumObjects(artistId);
+    }
+
+    if (dataAlbums.body.items.length !== 0) {
+        dataAlbums.body.items.sort((a, b) => a.release_date.localeCompare(b.release_date));
+        dataAlbums.body.items.reverse();
+
+        let count = 0;
+
+        while (dataAlbums.body.items[count].album_type === 'compilation') {
+            count++;
+        }
+
+        latestReleases.push(dataAlbums.body.items[count]);
+
+        let existsMoreLatestReleases = true;
+        let countAux = count + 1;
+
+        while (existsMoreLatestReleases && dataAlbums.body.items[countAux] !== undefined) {
+            if (dataAlbums.body.items[countAux].release_date === dataAlbums.body.items[count].release_date) {
+                latestReleases.push(dataAlbums.body.items[countAux]);
+                countAux++;
+            } else {
+                existsMoreLatestReleases = false;
+            }
+        }
+    } else {
+        return [];
+    }
+
+    return latestReleases;
+}
+
+exports.getAlbumInfos = getAlbumInfos;
+exports.getLatestAlbumObjects = getLatestAlbumObjects;
