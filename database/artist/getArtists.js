@@ -13,10 +13,10 @@ function getAllRegisteredArtists(){
 /**
     Returns object with an array of the artists that:
     - Are registered in the database 
-    - Are registered on a certain guild
+    - Are registered on a certain guild (channel)
 */
 
-function getRegisteredArtistsGuild(artistIds, idReleasesChannel) {
+function getRegisteredArtists(artistIds, idReleasesChannel) {
     return mongoClient.collection('artist').aggregate([
         { $match: { _id: { $in: artistIds }, idGuildChannels: idReleasesChannel } },
         {
@@ -135,6 +135,7 @@ function getArtistsReleasesChannels(artistIds){
 }
 
 exports.getAllRegisteredArtists = getAllRegisteredArtists;
+exports.getRegisteredArtists = getRegisteredArtists;
 exports.getRegisteredArtistsGuild = getRegisteredArtistsGuild;
 exports.getRegisteredArtistsChannel = getRegisteredArtistsChannel;
 exports.getRegisteredArtistsDB = getRegisteredArtistsDB;

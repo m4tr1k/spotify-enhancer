@@ -1,4 +1,5 @@
-const { getNewestReleases, sendNewReleases } = require('./releases');
+const { getNewestReleases } = require('./releases');
+const { sendReleaseChannels } = require('../src/releases/sendReleases')
 const { getAllArtists, updateNewReleasesArtist } = require('../database/artist/artistHandler');
 
 async function checkNewReleases() {
@@ -15,7 +16,7 @@ async function checkNewReleases() {
                     newReleases.push(newestReleases[i]);
                     if (!printedReleases.includes(newestReleases[i].album.spotifyLink)) {
                         printedReleases.push(newestReleases[i].album.spotifyLink);
-                        sendNewReleases(newestReleases[i], artist.idGuildChannels);
+                        sendReleaseChannels(newestReleases[i]);
                     }
                 }
             }

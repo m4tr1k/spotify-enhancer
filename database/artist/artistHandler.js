@@ -1,6 +1,6 @@
 const { insertArtistsDB, updateArtistsDB, registerArtistChannel } = require('./addArtists');
 const { removeArtistGuild, removeAllArtistsChannels } = require('./removeArtists');
-const { getRegisteredArtistsDB, getRegisteredArtistsGuild, getAllRegisteredArtists, getArtistsReleasesChannels } = require('./getArtists');
+const { getRegisteredArtistsDB, getRegisteredArtists, getAllRegisteredArtists, getArtistsReleasesChannels } = require('./getArtists');
 const { removeOldReleases, updateNewReleases } = require('./releasesHandler');
 
 function getAllArtists(){
@@ -34,7 +34,7 @@ async function updateNewReleasesArtist(newestReleases, oldReleases, artistID){
 async function addArtists(artists, idReleasesChannel) {
     //Artists that are registered in the database and on a certain guild
     const idArtists = artists.map(artist => artist.artistId);
-    const registeredArtistsGuildCursor = getRegisteredArtistsGuild(idArtists, idReleasesChannel);
+    const registeredArtistsGuildCursor = getRegisteredArtists(idArtists, idReleasesChannel);
 
     const registeredArtistsGuild = await registeredArtistsGuildCursor.next();
     let unregisteredArtists, unregisteredArtistsNames = [];

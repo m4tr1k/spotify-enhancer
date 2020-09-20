@@ -1,8 +1,6 @@
 const axios = require('axios');
 const spotify = require('../api/spotify-properties');
-const { getArtistsReleasesChannels } = require('../database/artist/getArtists');
 const { checkTodayRelease, sleep } = require('../utils/utils');
-const { sendReleaseChannels } = require('../src/releases/sendReleases');
 const Album = require('./components/Album');
 
 async function getFullAlbumDetails(href) {
@@ -210,23 +208,5 @@ async function getLatestAlbumObjects(artistId) {
     return latestReleases;
 }
 
-async function sendNewReleases(newestRelease, idReleasesChannels) {
-    if(newestRelease.artistIds.length > 1){
-        const releasesChannelsCursor = getArtistsReleasesChannels(newestRelease.artistIds);
-        const releasesChannels = await releasesChannelsCursor.next();
-
-        if (releasesChannels.idChannels.length !== 0) {
-            for (let i = 0; i < releasesChannels.idChannels.length; i++) {
-                if (!idReleasesChannels.includes(releasesChannels.idChannels[i])) {
-                    idReleasesChannels.push(releasesChannels.idChannels[i]);
-                }
-            }
-        }
-    }
-
-    sendReleaseChannels(newestRelease.album, idReleasesChannels);
-}
-
 exports.getNewestReleases = getNewestReleases;
-exports.sendNewReleases = sendNewReleases;
 exports.getLatestReleases = getLatestReleases;
