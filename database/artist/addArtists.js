@@ -1,6 +1,7 @@
 const mongoClient = require('../../api/mongoDB-properties');
 const Artist = require('../../src/components/Artist');
-const { getLatestReleases, createEmbeds } = require('../../src/releases');
+const { getLatestReleases } = require('../../src/releases/newReleases');
+const { sendReleasesChannel } = require('../../src/releases/sendReleases');
 const { checkTodayRelease } = require('../../utils/utils');
 
 async function insertArtistsDB(artists, idReleasesChannel) {
@@ -19,7 +20,7 @@ async function updateArtistsDB(artists, idReleasesChannel){
             { _id: { $in: artists.artistIds } },
             { $push: { idGuildChannels: idReleasesChannel } }
         ),
-        createEmbeds(todayReleases, [idReleasesChannel])
+        sendReleasesChannel(todayReleases, idReleasesChannel)
     ])
 }
 
@@ -76,7 +77,7 @@ async function createArrayArtistsObjects(artists, idReleasesChannel) {
     }
 
     if (latestReleasesToday.length !== 0) {
-        createEmbeds(latestReleasesToday, [idReleasesChannel]);
+        sendReleasesChannel(latestReleasesToday, idReleasesChannel);
     }
 
     return arrayArtists;
