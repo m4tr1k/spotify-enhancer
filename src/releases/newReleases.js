@@ -1,5 +1,5 @@
 const { checkTodayRelease } = require('../../utils/utils');
-const { getAlbumInfos } = require('./infoReleases');
+const { getAlbumInfos, getLatestAlbumObjects } = require('./infoReleases');
 
 async function getNewestReleases(artistId) {
     let newestReleases = [];
