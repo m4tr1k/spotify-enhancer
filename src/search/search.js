@@ -1,4 +1,6 @@
 const spotify = require('../../api/spotify-properties');
+const { getSpotifyId } = require('../../utils/utils');
+const { ARTIST } = require('../../constants/constants');
 
 var InfoIDs = function(props){
     this.artistId = props.artistId;
@@ -10,8 +12,8 @@ async function searchArtists(artists, msgDiscord){
     let artistIDs = [];
     for(var i = 0; i < artists.length; i++){
         if(artists[i] !== ''){
-            if(artists[i].startsWith("spotify:artist:") || artists[i].startsWith("https://open.spotify.com/artist/")){
-                const id = getId(artists[i]);
+            const id = getSpotifyId(artists[i], ARTIST);
+            if(id !== undefined){
                 artistIDs.push(id);
             } else {
                 const artist = await searchArtistByName(artists[i], msgDiscord);
@@ -22,7 +24,7 @@ async function searchArtists(artists, msgDiscord){
                     })
                     artistsInfos.push(artistInfo);
                 }
-            } 
+            }           
         }
     }
 
@@ -43,26 +45,6 @@ async function searchArtists(artists, msgDiscord){
     }
 
     return artistsInfos;
-}
-
-function getId(artist){
-    const prefixURI = artist.startsWith("spotify:artist:");
-    let id;
-
-    switch(prefixURI){
-        case true:
-            id = artist.replace("spotify:artist:", "");
-            break;
-        case false:
-            if(artist.indexOf('?') !== -1){
-                id = artist.substring(artist.lastIndexOf('/') + 1, artist.lastIndexOf('?'));
-            } else {
-                id = artist.substring(artist.lastIndexOf('/') + 1);
-            }
-            break;
-    }
-
-    return id;
 }
 
  async function searchArtistByName(artistName, msgDiscord){
@@ -146,5 +128,4 @@ async function chooseArtist(possibleArtists, number, msg, authorID){
 }
 
 exports.searchArtists = searchArtists;
-exports.getId = getId;
 exports.searchArtistByName = searchArtistByName;
