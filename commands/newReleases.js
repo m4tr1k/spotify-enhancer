@@ -1,8 +1,10 @@
 const search = require('../src/search/search');
+const { getSpotifyId } = require('../utils/utils');
 const { getLatestReleases } = require('../src/releases/newReleases');
 const { sendReleasesChannel } = require('../src/releases/sendReleases');
 const { getRegisteredArtistsDB } = require('../database/artist/getArtists');
 const {releasesCommandsChannels, releasesChannels} = require('../api/discord-properties');
+const { ARTIST } = require('../constants/constants');
 
 async function newReleases(msgDiscord, content){
     const isReleasesCommandsChannel = releasesCommandsChannels.some(releasesCommandsChannel => releasesCommandsChannel === msgDiscord.channel.id);
@@ -49,15 +51,15 @@ async function printNewReleases(msgDiscord, possibleArtists, releasesChannel){
     let artistIDs = [];
 
     for(let i = 0; i < possibleArtists.length; i++){
-        if(possibleArtists[i].startsWith("spotify:artist:") || possibleArtists[i].startsWith("https://open.spotify.com/artist/")){
-            const id = search.getId(possibleArtists[i]);
+        const id = getSpotifyId(possibleArtists[i], ARTIST);
+        if(id !== undefined){
             artistIDs.push(id);
         } else {
             const artist = await search.searchArtistByName(possibleArtists[i], msgDiscord);
             if(artist !== ''){
                 artistIDs.push(artist.id);
-            }
-        }
+            }   
+        }        
     }
 
     if(artistIDs.length !== 0){
