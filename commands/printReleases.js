@@ -52,7 +52,6 @@ async function sendReleases(msgDiscord, content, idReleasesChannel) {
     }
 
     if (idAlbums.length > 0) {
-        console.log(idAlbums);
         const albums = await getReleases(idAlbums);
         sendReleasesChannel(albums, idReleasesChannel);
         msgDiscord.channel.send("Desired releases printed!");
