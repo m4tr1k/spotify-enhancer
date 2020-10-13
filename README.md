@@ -75,8 +75,6 @@ In order to run the bot on your machine, you need:
 
 2. Rename the file `config-example.json` to `config.json` and replace the fields with your information.
 
-3. Since this project is using an outdated dependency for the Spotify API, it is required to update the files in order to support rate limit. Go to [this repository src folder](https://github.com/m4tr1k/spotify-web-api-node/tree/master/src) and replace the files `http-manager.js` and `webapi-error.js` of the dependency `spotify-web-api-node` inside `node-modules` with the correspondent files on the fork.
-
 If everything goes smoothly, you should see this in your console:
 
 ![image-20200913193245156](img/success.png)
